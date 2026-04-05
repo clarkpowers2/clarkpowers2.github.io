@@ -53,13 +53,27 @@ export interface Activity {
 export interface Notification {
   id: string
   storeId: string
-  type: 'daily_expiring' | 'revenue_opportunity' | 'missed_opportunity'
+  type: 'daily_expiring' | 'revenue_opportunity' | 'missed_opportunity' | 'staff_alert'
   title: string
   message: string
   count?: number
   potentialRevenue?: number
   timestamp: string
   read: boolean
+  productIds?: string[]
+  priority?: 'low' | 'medium' | 'high' | 'critical'
+}
+
+export interface AIDiscountSuggestion {
+  suggestedDiscount: number
+  reasoning: string
+  confidence: number
+  factors: {
+    daysUntilExpiry: number
+    categoryRisk: string
+    timeOfDay: string
+    marketDemand: string
+  }
 }
 
 export interface RevenueMetrics {

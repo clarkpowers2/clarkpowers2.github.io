@@ -10,6 +10,9 @@ import { AddProductDialog } from '@/components/AddProductDialog'
 import { CreateStoreDialog } from '@/components/CreateStoreDialog'
 import { PrintLabel } from '@/components/PrintLabel'
 import { CustomDiscountDialog } from '@/components/CustomDiscountDialog'
+import { AIDiscountDialog } from '@/components/AIDiscountDialog'
+import { StaffAlertsPanel } from '@/components/StaffAlertsPanel'
+import { PriceCalculator } from '@/components/PriceCalculator'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -18,7 +21,7 @@ import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { 
   Plus, ChartLine, Package, ClockCountdown, Storefront,
-  CurrencyDollar, ShoppingCart, WarningCircle, Bell
+  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain
 } from '@phosphor-icons/react'
 import { toast, Toaster } from 'sonner'
 import { calculateDiscountInfo, calculateDaysUntilExpiry } from '@/lib/productUtils'
@@ -37,6 +40,8 @@ function App() {
   const [printDialogOpen, setPrintDialogOpen] = useState(false)
   const [customDiscountProduct, setCustomDiscountProduct] = useState<Product | null>(null)
   const [customDiscountDialogOpen, setCustomDiscountDialogOpen] = useState(false)
+  const [aiDiscountProduct, setAiDiscountProduct] = useState<Product | null>(null)
+  const [aiDiscountDialogOpen, setAiDiscountDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
 
   useEffect(() => {
@@ -322,6 +327,24 @@ function App() {
     })
   }
 
+  const handleAIDiscount = (product: Product) => {
+    setAiDiscountProduct(product)
+    setAiDiscountDialogOpen(true)
+  }
+
+  const handleDismissNotification = (notificationId: string) => {
+    setNotifications(current =>
+      (current || []).map(n =>
+        n.id === notificationId ? { ...n, read: true } : n
+      )
+    )
+  }
+
+  const handleViewAffectedProducts = (productIds: string[]) => {
+    setActiveTab('products')
+    toast.info(`Showing ${productIds.length} affected products`)
+  }
+
   const handlePrintLabel = (product: Product) => {
     setPrintProduct(product)
     setPrintDialogOpen(true)
@@ -461,7 +484,7 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 pb-24">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="grid w-full max-w-4xl grid-cols-5">
             <TabsTrigger value="dashboard" className="gap-2">
               <ChartLine size={16} weight="bold" />
               Dashboard
@@ -469,6 +492,19 @@ function App() {
             <TabsTrigger value="products" className="gap-2">
               <Package size={16} weight="bold" />
               Products
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="gap-2">
+              <Bell size={16} weight="bold" />
+              Alerts
+              {unreadNotifications.length > 0 && (
+                <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center bg-destructive text-destructive-foreground">
+                  {unreadNotifications.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="calculator" className="gap-2">
+              <Calculator size={16} weight="bold" />
+              Calculator
             </TabsTrigger>
             <TabsTrigger value="activity" className="gap-2">
               <ClockCountdown size={16} weight="bold" />
@@ -590,6 +626,7 @@ function App() {
                           product={product}
                           onApplyDiscount={handleApplyDiscount}
                           onCustomDiscount={handleCustomDiscount}
+                          onAIDiscount={handleAIDiscount}
                           onPrintLabel={handlePrintLabel}
                           onRemove={handleRemove}
                         />
@@ -611,6 +648,7 @@ function App() {
                           product={product}
                           onApplyDiscount={handleApplyDiscount}
                           onCustomDiscount={handleCustomDiscount}
+                          onAIDiscount={handleAIDiscount}
                           onPrintLabel={handlePrintLabel}
                           onRemove={handleRemove}
                         />
@@ -632,6 +670,7 @@ function App() {
                           product={product}
                           onApplyDiscount={handleApplyDiscount}
                           onCustomDiscount={handleCustomDiscount}
+                          onAIDiscount={handleAIDiscount}
                           onPrintLabel={handlePrintLabel}
                           onRemove={handleRemove}
                         />
@@ -655,6 +694,7 @@ function App() {
                             product={product}
                             onApplyDiscount={handleApplyDiscount}
                             onCustomDiscount={handleCustomDiscount}
+                            onAIDiscount={handleAIDiscount}
                             onPrintLabel={handlePrintLabel}
                             onRemove={handleRemove}
                           />
@@ -665,6 +705,19 @@ function App() {
                 )}
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="alerts">
+            <StaffAlertsPanel
+              notifications={notifications || []}
+              products={storeProducts}
+              onDismiss={handleDismissNotification}
+              onViewProducts={handleViewAffectedProducts}
+            />
+          </TabsContent>
+
+          <TabsContent value="calculator">
+            <PriceCalculator />
           </TabsContent>
 
           <TabsContent value="activity">
@@ -707,6 +760,13 @@ function App() {
         product={customDiscountProduct}
         open={customDiscountDialogOpen}
         onOpenChange={setCustomDiscountDialogOpen}
+        onApply={handleApplyCustomDiscount}
+      />
+
+      <AIDiscountDialog
+        product={aiDiscountProduct}
+        open={aiDiscountDialogOpen}
+        onOpenChange={setAiDiscountDialogOpen}
         onApply={handleApplyCustomDiscount}
       />
     </div>

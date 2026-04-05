@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { calculateDiscountInfo, formatCurrency, getUrgencyColor, getUrgencyBadgeColor, getCategoryIcon } from '@/lib/productUtils'
-import { Tag, Printer, CheckCircle, Trash, Sparkle } from '@phosphor-icons/react'
+import { Tag, Printer, CheckCircle, Trash, Sparkle, Brain } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import * as PhosphorIcons from '@phosphor-icons/react'
 
@@ -11,11 +11,12 @@ interface ProductCardProps {
   product: Product
   onApplyDiscount: (product: Product) => void
   onCustomDiscount: (product: Product) => void
+  onAIDiscount?: (product: Product) => void
   onPrintLabel: (product: Product) => void
   onRemove: (productId: string) => void
 }
 
-export function ProductCard({ product, onApplyDiscount, onCustomDiscount, onPrintLabel, onRemove }: ProductCardProps) {
+export function ProductCard({ product, onApplyDiscount, onCustomDiscount, onAIDiscount, onPrintLabel, onRemove }: ProductCardProps) {
   const discountInfo = calculateDiscountInfo(product)
   const urgencyColorClass = getUrgencyColor(discountInfo.urgencyLevel)
   const badgeColorClass = getUrgencyBadgeColor(discountInfo.urgencyLevel)
@@ -105,6 +106,16 @@ export function ProductCard({ product, onApplyDiscount, onCustomDiscount, onPrin
                   <Tag size={20} weight="bold" className="mr-2" />
                   Apply Discount
                 </Button>
+                {onAIDiscount && (
+                  <Button
+                    onClick={() => onAIDiscount(product)}
+                    size="lg"
+                    variant="outline"
+                    className="border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <Brain size={20} weight="bold" />
+                  </Button>
+                )}
                 <Button
                   onClick={() => onCustomDiscount(product)}
                   size="lg"
