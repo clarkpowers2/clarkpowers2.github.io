@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ProductCategory } from '@/lib/types'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { CalendarBlank } from '@phosphor-icons/react'
-import { format } from 'date-fns'
+import { CalendarBlank, Scan } from '@phosphor-icons/react'
+import { format, parse } from 'date-fns'
+import { ScannerDialog } from '@/components/ScannerDialog'
+import { toast } from 'sonner'
 
 interface AddProductDialogProps {
   open: boolean
@@ -26,6 +28,7 @@ export function AddProductDialog({ open, onOpenChange, onAdd }: AddProductDialog
   const [category, setCategory] = useState<ProductCategory>('other')
   const [price, setPrice] = useState('')
   const [expiryDate, setExpiryDate] = useState<Date>()
+  const [scannerOpen, setScannerOpen] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,6 +49,24 @@ export function AddProductDialog({ open, onOpenChange, onAdd }: AddProductDialog
     setPrice('')
     setExpiryDate(undefined)
     onOpenChange(false)
+  }
+
+  const handleScanComplete = (data: { expiryDate: string; productName?: string; barcode?: string }) => {
+    if (data.expiryDate) {
+      try {
+        const parsedDate = parse(data.expiryDate, 'yyyy-MM-dd', new Date())
+        setExpiryDate(parsedDate)
+        toast.success('Expiry date scanned!')
+      } catch (error) {
+        toast.error('Invalid date format')
+      }
+    }
+    
+    if (data.productName && !name) {
+      setName(data.productName)
+    }
+    
+    setScannerOpen(false)
   }
 
   return (
@@ -101,32 +122,43 @@ export function AddProductDialog({ open, onOpenChange, onAdd }: AddProductDialog
           
           <div className="space-y-2">
             <Label className="text-sm font-medium">Expiry Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full h-12 justify-start text-left font-normal"
-                >
-                  <CalendarBlank size={20} weight="bold" className="mr-2" />
-                  {expiryDate ? format(expiryDate, 'PPP') : 'Select date'}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={expiryDate}
-                  onSelect={setExpiryDate}
-                  disabled={(date) => {
-                    const today = new Date()
-                    today.setHours(0, 0, 0, 0)
-                    const selectedDate = new Date(date)
-                    selectedDate.setHours(0, 0, 0, 0)
-                    return selectedDate < today
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-12 justify-start text-left font-normal"
+                  >
+                    <CalendarBlank size={20} weight="bold" className="mr-2" />
+                    {expiryDate ? format(expiryDate, 'PPP') : 'Select date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={expiryDate}
+                    onSelect={setExpiryDate}
+                    disabled={(date) => {
+                      const today = new Date()
+                      today.setHours(0, 0, 0, 0)
+                      const selectedDate = new Date(date)
+                      selectedDate.setHours(0, 0, 0, 0)
+                      return selectedDate < today
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-12 w-12 shrink-0"
+                onClick={() => setScannerOpen(true)}
+              >
+                <Scan size={20} weight="bold" />
+              </Button>
+            </div>
           </div>
           
           <Button type="submit" size="lg" className="w-full mt-6">
@@ -134,6 +166,12 @@ export function AddProductDialog({ open, onOpenChange, onAdd }: AddProductDialog
           </Button>
         </form>
       </DialogContent>
+      
+      <ScannerDialog
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onScanComplete={handleScanComplete}
+      />
     </Dialog>
   )
 }

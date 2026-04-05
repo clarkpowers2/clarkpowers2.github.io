@@ -54,12 +54,19 @@ This is a full-featured SaaS platform with revenue analytics, multi-store manage
 - **Progression**: Week ends → Report compiled → Summary statistics calculated → Charts generated → View in dashboard or export
 - **Success criteria**: Managers use report to make strategic decisions; clear actionable insights
 
+### Auto-Expiry Date Scanning
+- **Functionality**: Camera-based barcode and OCR scanning to automatically capture expiry dates and product information from packaging
+- **Purpose**: Eliminates manual data entry errors and speeds up product registration
+- **Trigger**: Scan button in add product dialog
+- **Progression**: Click scan → Select barcode or OCR mode → Grant camera access → Position product → System detects/extracts data → Auto-fills form fields
+- **Success criteria**: 90% accuracy on common grocery barcodes; 80% accuracy on expiry date OCR; reduces data entry time from 30s to 5s per product
+
 ### Products & Workflow (Core)
-- **Functionality**: Add products, view by urgency, apply discounts, print labels - enhanced with store context
-- **Purpose**: Core operational workflow maintained from original FreshSave
-- **Trigger**: Add product button, product list interactions
-- **Progression**: Same as original but now scoped to active store and tracked by staff member
-- **Success criteria**: Original workflow uncompromised; enhanced with new data capture
+- **Functionality**: Add products, view by urgency, apply discounts, print labels - enhanced with store context and barcode/OCR scanning for expiry dates
+- **Purpose**: Core operational workflow maintained from original FreshSave with auto-capture capabilities
+- **Trigger**: Add product button, product list interactions, scan button in add product dialog
+- **Progression**: Click add product → Enter details or scan barcode/expiry date → Camera opens → Barcode detected or image captured → OCR extracts date → Auto-fills form → Complete and save
+- **Success criteria**: Original workflow uncompromised; scanning reduces manual entry time by 70%
 
 ## Edge Case Handling
 
@@ -73,6 +80,11 @@ This is a full-featured SaaS platform with revenue analytics, multi-store manage
 - **Report Generation Failure** - Retry mechanism; shows last successful report
 - **Multi-Store Data Conflicts** - Each store has independent data namespace
 - **Time Zone Handling** - Store-level time zone settings for accurate expiry calculations
+- **Camera Access Denied** - Fallback to manual entry with clear messaging
+- **OCR Scan Failure** - Option to retry or switch to manual entry; confidence scores shown
+- **Barcode Not Found** - LLM generates realistic product name based on barcode pattern
+- **Poor Lighting Conditions** - Visual feedback guides user to improve camera angle/lighting
+- **Multiple Date Formats** - OCR intelligently parses various date formats (MM/DD/YYYY, DD-MM-YYYY, etc.)
 
 ## Design Direction
 
@@ -176,6 +188,11 @@ Animations should feel sophisticated and purposeful - reinforcing the premium Sa
 - TrendDown (missed opportunities)
 - Calendar (date ranges)
 - Funnel (category filters)
+- Camera (photo capture)
+- Barcode (barcode scanning)
+- TextAa (OCR text recognition)
+- Scan (scanning indicator)
+- CheckCircle (scan success)
 
 **Spacing**:
 - Dashboard grid: gap-6 between major sections
