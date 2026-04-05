@@ -13,6 +13,9 @@ import { CustomDiscountDialog } from '@/components/CustomDiscountDialog'
 import { AIDiscountDialog } from '@/components/AIDiscountDialog'
 import { StaffAlertsPanel } from '@/components/StaffAlertsPanel'
 import { PriceCalculator } from '@/components/PriceCalculator'
+import { ScannerDialog } from '@/components/ScannerDialog'
+import { AIChatBot } from '@/components/AIChatBot'
+import { RealtimeAudit } from '@/components/RealtimeAudit'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -21,7 +24,7 @@ import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { 
   Plus, ChartLine, Package, ClockCountdown, Storefront,
-  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain
+  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain, Scan, Receipt
 } from '@phosphor-icons/react'
 import { toast, Toaster } from 'sonner'
 import { calculateDiscountInfo, calculateDaysUntilExpiry } from '@/lib/productUtils'
@@ -42,6 +45,8 @@ function App() {
   const [customDiscountDialogOpen, setCustomDiscountDialogOpen] = useState(false)
   const [aiDiscountProduct, setAiDiscountProduct] = useState<Product | null>(null)
   const [aiDiscountDialogOpen, setAiDiscountDialogOpen] = useState(false)
+  const [scannerDialogOpen, setScannerDialogOpen] = useState(false)
+  const [aiChatBotOpen, setAiChatBotOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
 
   useEffect(() => {
@@ -345,6 +350,12 @@ function App() {
     toast.info(`Showing ${productIds.length} affected products`)
   }
 
+  const handleScanComplete = (data: { expiryDate: string; productName?: string; barcode?: string }) => {
+    if (data.expiryDate) {
+      setAddDialogOpen(true)
+    }
+  }
+
   const handlePrintLabel = (product: Product) => {
     setPrintProduct(product)
     setPrintDialogOpen(true)
@@ -484,7 +495,7 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 pb-24">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-5">
+          <TabsList className="grid w-full max-w-6xl grid-cols-6">
             <TabsTrigger value="dashboard" className="gap-2">
               <ChartLine size={16} weight="bold" />
               Dashboard
@@ -492,6 +503,10 @@ function App() {
             <TabsTrigger value="products" className="gap-2">
               <Package size={16} weight="bold" />
               Products
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="gap-2">
+              <Receipt size={16} weight="bold" />
+              Audit
             </TabsTrigger>
             <TabsTrigger value="alerts" className="gap-2">
               <Bell size={16} weight="bold" />
@@ -707,6 +722,10 @@ function App() {
             )}
           </TabsContent>
 
+          <TabsContent value="audit">
+            <RealtimeAudit products={storeProducts} />
+          </TabsContent>
+
           <TabsContent value="alerts">
             <StaffAlertsPanel
               notifications={notifications || []}
@@ -726,7 +745,24 @@ function App() {
         </Tabs>
       </main>
 
-      <div className="fixed bottom-6 right-6 no-print">
+      <div className="fixed bottom-6 right-6 flex flex-col gap-3 no-print">
+        <Button
+          onClick={() => setAiChatBotOpen(!aiChatBotOpen)}
+          size="lg"
+          variant={aiChatBotOpen ? "default" : "secondary"}
+          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+        >
+          <Brain size={24} weight="bold" />
+        </Button>
+        <Button
+          onClick={() => setScannerDialogOpen(true)}
+          size="lg"
+          variant="secondary"
+          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          disabled={!currentStoreId}
+        >
+          <Scan size={24} weight="bold" />
+        </Button>
         <Button
           onClick={() => setAddDialogOpen(true)}
           size="lg"
@@ -736,6 +772,12 @@ function App() {
           <Plus size={24} weight="bold" />
         </Button>
       </div>
+
+      <AIChatBot
+        products={storeProducts}
+        isOpen={aiChatBotOpen}
+        onClose={() => setAiChatBotOpen(false)}
+      />
 
       <AddProductDialog
         open={addDialogOpen}
@@ -768,6 +810,12 @@ function App() {
         open={aiDiscountDialogOpen}
         onOpenChange={setAiDiscountDialogOpen}
         onApply={handleApplyCustomDiscount}
+      />
+
+      <ScannerDialog
+        open={scannerDialogOpen}
+        onOpenChange={setScannerDialogOpen}
+        onScanComplete={handleScanComplete}
       />
     </div>
   )
