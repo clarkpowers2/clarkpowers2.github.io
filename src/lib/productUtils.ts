@@ -13,7 +13,33 @@ export function calculateDaysUntilExpiry(expiryDate: string): number {
   return diffDays
 }
 
-export function getDiscountPercentage(daysUntilExpiry: number): number {
+export function getCategoryModifier(category: Product['category']): number {
+  const modifiers: Record<Product['category'], number> = {
+    meat: 15,
+    dairy: 10,
+    produce: 10,
+    bakery: 5,
+    packaged: 0,
+    other: 0
+  }
+  return modifiers[category]
+}
+
+export function getTimeModifier(): number {
+  const hour = new Date().getHours()
+  
+  if (hour >= 18 && hour <= 21) {
+    return 10
+  }
+  
+  if (hour >= 15 && hour <= 17) {
+    return 5
+  }
+  
+  return 0
+}
+
+export function getBaseDiscountPercentage(daysUntilExpiry: number): number {
   if (daysUntilExpiry <= 0) return 0
   if (daysUntilExpiry === 1) return 50
   if (daysUntilExpiry === 2) return 25
@@ -23,8 +49,12 @@ export function getDiscountPercentage(daysUntilExpiry: number): number {
 
 export function calculateDiscountInfo(product: Product): DiscountInfo {
   const daysUntilExpiry = calculateDaysUntilExpiry(product.expiryDate)
-  const discountPercentage = getDiscountPercentage(daysUntilExpiry)
-  const discountedPrice = product.originalPrice * (1 - discountPercentage / 100)
+  const baseDiscount = getBaseDiscountPercentage(daysUntilExpiry)
+  const categoryModifier = getCategoryModifier(product.category)
+  const timeModifier = getTimeModifier()
+  
+  const totalDiscount = Math.min(baseDiscount + categoryModifier + timeModifier, 75)
+  const discountedPrice = product.originalPrice * (1 - totalDiscount / 100)
   
   let urgencyLevel: DiscountInfo['urgencyLevel'] = 'low'
   
@@ -40,9 +70,11 @@ export function calculateDiscountInfo(product: Product): DiscountInfo {
   
   return {
     daysUntilExpiry,
-    discountPercentage,
+    discountPercentage: totalDiscount,
     discountedPrice,
-    urgencyLevel
+    urgencyLevel,
+    categoryModifier,
+    timeModifier
   }
 }
 

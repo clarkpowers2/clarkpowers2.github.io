@@ -1,180 +1,193 @@
-# FreshSave - Grocery Waste Recovery System
+# FreshSave Pro - Multi-Store Revenue Recovery Platform
 
-A mobile-first application that helps grocery store staff reduce waste and recover revenue by intelligently discounting expiring products.
+A scalable SaaS platform that helps grocery chains reduce waste and recover revenue across multiple store locations through intelligent discounting, analytics, and automation.
 
 **Experience Qualities**:
-1. **Effortless** - Non-technical staff should complete tasks with zero training or confusion
-2. **Immediate** - Every action feels instant with clear visual feedback and no waiting
-3. **Trustworthy** - Clean, professional design that store managers feel confident deploying
+1. **Professional** - Premium SaaS interface that demonstrates ROI and business value at every touchpoint
+2. **Insightful** - Data-driven dashboards that reveal revenue opportunities and performance trends
+3. **Scalable** - Multi-tenant architecture supporting chains with multiple locations and staff members
 
-**Complexity Level**: Light Application (multiple features with basic state)
-This is a focused tool with clear workflows - add products, view urgency-sorted lists, apply discounts, and print labels. State management is straightforward (product list, discount calculations), but the app serves a critical business function requiring polish and reliability.
+**Complexity Level**: Complex Application (advanced functionality with multiple views)
+This is a full-featured SaaS platform with revenue analytics, multi-store management, staff tracking, smart discount automation, and reporting capabilities. The architecture supports multi-tenancy, role-based features, and data aggregation across stores while maintaining the simplicity of the original workflow.
 
 ## Essential Features
 
-### Dashboard View
-- **Functionality**: Displays all products sorted by expiration urgency with key metrics
-- **Purpose**: Gives staff immediate visibility into what needs attention today
-- **Trigger**: App launch (default view)
-- **Progression**: App opens → Stats cards show today's metrics → Product list organized by urgency (Today/Tomorrow/This Week) → Tap product to view details
-- **Success criteria**: Staff can identify critical items within 3 seconds of opening the app
+### Revenue Dashboard
+- **Functionality**: Executive overview showing money recovered today/week/month, items sold, and trend charts
+- **Purpose**: Demonstrates business value and ROI of the platform
+- **Trigger**: Primary navigation tab or app launch for managers
+- **Progression**: Navigate to dashboard → View revenue metrics → See comparison charts → Filter by date range → Export reports
+- **Success criteria**: Managers can articulate ROI within 10 seconds; data updates in real-time
 
-### Add Product
-- **Functionality**: Quick form to register new expiring products
-- **Purpose**: Rapid data entry during inventory walks or receiving
-- **Trigger**: Tap floating "+" button from dashboard
-- **Progression**: Tap + → Dialog opens → Fill name, category, price, expiry → Save → Product appears in appropriate urgency section → Success animation
-- **Success criteria**: Add a product in under 20 seconds; form validates and prevents errors
+### Multi-Store Management
+- **Functionality**: Create and manage multiple store locations with independent inventories and performance tracking
+- **Purpose**: Scales platform for regional chains and franchises
+- **Trigger**: Store selector in header or settings panel
+- **Progression**: Create store → Set location details → Switch between stores → Compare performance across locations → View chain-wide aggregates
+- **Success criteria**: Seamless switching between stores; clear visual indication of active store
 
-### Smart Discount Engine
-- **Functionality**: Automatically calculates discounts based on days until expiry (3 days = 10%, 2 days = 25%, 1 day = 50%)
-- **Purpose**: Removes mental math and ensures consistent pricing strategy
-- **Trigger**: Automatic on product creation and daily recalculation
-- **Progression**: Product saved → Days until expiry calculated → Discount percentage determined → New price computed → Badge displays discount %
-- **Success criteria**: Discounts update correctly and display prominently; calculations are always accurate
+### Smart Discount Engine (Enhanced)
+- **Functionality**: Dynamic discounts based on category urgency (meat = aggressive), time of day (evening = higher %), and days until expiry
+- **Purpose**: Maximizes recovery while matching customer shopping patterns
+- **Trigger**: Automatic calculation on product add and every hour
+- **Progression**: Product added → Category evaluated → Time-based modifier applied → Final discount calculated → Staff can override if needed
+- **Success criteria**: Discounts feel intelligent; recovery rates improve 15-30% vs. static discounts
 
-### Apply Discount Action
-- **Functionality**: Marks product as discounted and ready for label printing
-- **Purpose**: Confirms staff intent to apply the suggested discount
-- **Trigger**: Tap "Apply Discount" button on product card
-- **Progression**: Tap button → Satisfying animation → Button changes to "Print Label" → Product marked as discounted → Stats update
-- **Success criteria**: Visual confirmation is immediate and obvious; action is reversible
+### Staff Activity Tracking
+- **Functionality**: Logs all discount applications and label prints with staff member attribution and timestamps
+- **Purpose**: Accountability, performance measurement, and audit trail
+- **Trigger**: Automatic on any discount or print action
+- **Progression**: Staff applies discount → User identified → Action logged with timestamp → Activity appears in log → Managers review performance
+- **Success criteria**: Complete audit trail; identify top performers
 
-### Label Generator
-- **Functionality**: Creates a printable price label optimized for thermal or standard printers
-- **Purpose**: Provides customer-facing price labels without manual writing
-- **Trigger**: Tap "Print Label" button on discounted product
-- **Progression**: Tap Print → Print dialog opens → Label preview shown → Print confirmation → Product marked as labeled
-- **Success criteria**: Label is readable, properly formatted, and prints correctly on common store printers
+### Notification System
+- **Functionality**: Daily alerts showing items expiring today and potential revenue at risk
+- **Purpose**: Proactive reminders ensure no opportunities are missed
+- **Trigger**: Daily at opening time; real-time for critical items
+- **Progression**: Morning arrives → Notification generated → Shows in dashboard notification panel → Click to view affected products → Take action
+- **Success criteria**: Reduce missed opportunities by 80%
 
-### Revenue Recovery Tracking
-- **Functionality**: Calculates potential revenue recovered from discounted sales vs. total loss
-- **Purpose**: Shows staff the business impact of their work
-- **Trigger**: Automatic calculation based on discounted products
-- **Progression**: Product discounted → Difference between discounted price and $0 (waste) calculated → Running total updated → Displayed in stats
-- **Success criteria**: Numbers are encouraging and update in real-time
+### Weekly Report Generator
+- **Functionality**: Automated summary report with total recovered, top categories, missed opportunities, and staff performance
+- **Purpose**: Strategic insights for managers to optimize operations
+- **Trigger**: Generated automatically Sunday night; viewable on-demand
+- **Progression**: Week ends → Report compiled → Summary statistics calculated → Charts generated → View in dashboard or export
+- **Success criteria**: Managers use report to make strategic decisions; clear actionable insights
+
+### Products & Workflow (Core)
+- **Functionality**: Add products, view by urgency, apply discounts, print labels - enhanced with store context
+- **Purpose**: Core operational workflow maintained from original FreshSave
+- **Trigger**: Add product button, product list interactions
+- **Progression**: Same as original but now scoped to active store and tracked by staff member
+- **Success criteria**: Original workflow uncompromised; enhanced with new data capture
 
 ## Edge Case Handling
 
-- **Expired Products** - Items past expiry date show in separate "Expired" section with remove option (cannot be discounted)
-- **No Products** - Empty state with clear "Add Your First Product" prompt and helpful icon
-- **Invalid Dates** - Form prevents selecting past dates; shows helpful error message
-- **Negative Prices** - Validation ensures prices are positive numbers
-- **Network Offline** - All data persists locally; app works completely offline
-- **Duplicate Entries** - Allow duplicates (same product name) since batch tracking may be needed
-- **Print Failure** - Retry button and manual label info shown if print fails
+- **Expired Products** - Separate section with remove option; contribute to "missed opportunities" metric
+- **No Products in Store** - Empty state with "Add Product" prompt
+- **No Stores Created** - Onboarding flow to create first store
+- **Store Switching** - Clear confirmation when switching; unsaved work warnings
+- **Staff Attribution** - Falls back to "System" if user not identified
+- **Network Offline** - All data persists locally; syncs when reconnected
+- **Invalid Dates** - Form validation prevents past dates
+- **Report Generation Failure** - Retry mechanism; shows last successful report
+- **Multi-Store Data Conflicts** - Each store has independent data namespace
+- **Time Zone Handling** - Store-level time zone settings for accurate expiry calculations
 
 ## Design Direction
 
-The design should feel like a professional retail tool - clean, fast, and confidence-inspiring. Think Apple Store checkout system meets modern inventory management. Staff should feel like they're using premium, reliable software that respects their time. Visual hierarchy must be immediately obvious with critical items (expiring today) demanding attention while tomorrow's items sit comfortably in view. The experience should feel satisfying - applying discounts and printing labels should have a tactile, accomplished feeling.
+The design should evoke a premium SaaS platform - polished, data-driven, and confidence-inspiring. Think Stripe dashboard meets modern retail analytics. Every screen should reinforce value: charts show money recovered, metrics demonstrate ROI, and the interface feels like enterprise-grade software. Visual hierarchy emphasizes business intelligence while maintaining the operational simplicity of the original workflow. Staff should feel empowered by data, managers should feel informed by insights, and executives should see clear business value.
 
 ## Color Selection
 
-A fresh, food-forward palette that balances urgency with approachability.
+A sophisticated, business-forward palette that balances analytical authority with the fresh food context.
 
-- **Primary Color**: Fresh lime green `oklch(0.75 0.15 135)` - Represents freshness, growth, and positive action; used for primary CTAs and success states
+- **Primary Color**: Deep teal `oklch(0.55 0.12 200)` - Professional, trustworthy, premium SaaS aesthetic; used for primary actions and data visualization
 - **Secondary Colors**: 
-  - Crisp white `oklch(0.99 0 0)` for backgrounds - clean, sterile like a well-run store
-  - Slate gray `oklch(0.35 0.01 255)` for secondary elements and borders
-  - Deep charcoal `oklch(0.25 0.01 255)` for primary text
-- **Accent Color**: Vibrant orange `oklch(0.70 0.18 45)` - Urgency and attention; used for "expiring today" indicators and important actions
-- **Supporting Colors**:
-  - Warning yellow `oklch(0.85 0.15 90)` for tomorrow's items
-  - Gentle blue `oklch(0.65 0.12 240)` for informational stats
-  - Danger red `oklch(0.60 0.22 25)` for expired items and delete actions
+  - Clean white `oklch(0.99 0 0)` for backgrounds
+  - Slate gray `oklch(0.35 0.01 255)` for secondary UI elements
+  - Charcoal `oklch(0.20 0.01 255)` for primary text
+  - Light gray `oklch(0.96 0.005 255)` for card backgrounds
+- **Accent Color**: Vibrant purple `oklch(0.60 0.18 290)` - Innovation and premium features; used for pro features and highlights
+- **Data Visualization Colors**:
+  - Success green `oklch(0.65 0.15 145)` - revenue recovered, positive metrics
+  - Warning amber `oklch(0.75 0.15 75)` - items expiring soon
+  - Danger red `oklch(0.60 0.22 25)` - missed opportunities, expired items
+  - Info blue `oklch(0.65 0.12 240)` - neutral statistics
 
 **Foreground/Background Pairings**:
-- Primary lime on white: `oklch(0.25 0.01 255)` text - Ratio 10.8:1 ✓
-- Orange accent: `oklch(1 0 0)` white text - Ratio 4.9:1 ✓
-- Charcoal on white: `oklch(0.25 0.01 255)` on `oklch(0.99 0 0)` - Ratio 14.2:1 ✓
-- Stats background blue `oklch(0.95 0.02 240)`: Charcoal text `oklch(0.25 0.01 255)` - Ratio 13.1:1 ✓
+- Primary teal on white: `oklch(0.20 0.01 255)` text - Ratio 12.5:1 ✓
+- Accent purple: `oklch(1 0 0)` white text - Ratio 5.2:1 ✓
+- Success green on light background: `oklch(0.20 0.01 255)` text - Ratio 11.8:1 ✓
+- Card background `oklch(0.96 0.005 255)`: Charcoal text - Ratio 14.5:1 ✓
 
 ## Font Selection
 
-Typography should feel modern, readable, and authoritative - staff need to scan information quickly and trust what they see.
+Typography should convey authority and clarity - managers need to trust the data, staff need to scan information quickly.
 
-- **Primary Font**: Inter - Clean, highly legible at all sizes, professional without being corporate
-- **Fallback**: System UI fonts for maximum performance
+- **Primary Font**: Space Grotesk - Modern, distinctive geometric sans with technical precision that elevates the SaaS aesthetic
+- **Secondary Font**: Inter - Clean workhorse for body text and data tables
+- **Fallback**: System UI fonts for performance
 
 **Typographic Hierarchy**:
-- H1 (Page Title): Inter Bold / 32px / -0.02em letter spacing / Line height 1.2
-- H2 (Section Headers): Inter Semibold / 20px / -0.01em letter spacing / Line height 1.3
-- Product Name: Inter Medium / 18px / Normal spacing / Line height 1.4
-- Body Text: Inter Regular / 16px / Normal spacing / Line height 1.5
-- Price (Large): Inter Bold / 28px / Tabular nums / Line height 1.2
-- Price (Small): Inter Medium / 16px / Tabular nums / Line height 1
-- Labels/Captions: Inter Medium / 14px / 0.01em letter spacing / Line height 1.3
-- Button Text: Inter Semibold / 16px / Normal spacing / Line height 1
+- H1 (Dashboard Title): Space Grotesk Bold / 36px / -0.02em letter spacing / Line height 1.1
+- H2 (Section Headers): Space Grotesk Semibold / 24px / -0.01em letter spacing / Line height 1.2
+- H3 (Card Headers): Space Grotesk Medium / 20px / Normal spacing / Line height 1.3
+- Revenue Numbers (Large): Space Grotesk Bold / 48px / Tabular nums / Line height 1
+- Stat Numbers: Space Grotesk Semibold / 32px / Tabular nums / Line height 1
+- Body Text: Inter Regular / 15px / Normal spacing / Line height 1.6
+- Labels/Captions: Inter Medium / 13px / 0.01em letter spacing / Line height 1.4
+- Button Text: Inter Semibold / 15px / Normal spacing / Line height 1
+- Data Tables: Inter Regular / 14px / Tabular nums / Line height 1.5
 
 ## Animations
 
-Animations should provide satisfying feedback for actions while maintaining speed - every animation reinforces that the app is responsive and reliable.
+Animations should feel sophisticated and purposeful - reinforcing the premium SaaS experience while maintaining snappy performance.
 
-- **Discount Application**: Scale pulse + checkmark appearance (300ms) - celebrates staff action
-- **Card Interactions**: Gentle lift on hover/press (150ms) - tactile feedback
-- **Stats Counter**: Number increment animation when values change (400ms ease-out) - shows live updates
-- **List Additions**: Slide-in from right (250ms) - shows where new items appear
-- **Success States**: Subtle green flash + check icon fade-in (200ms) - confirms action
-- **Delete/Remove**: Swipe-away animation (300ms) - clear cause and effect
-- **Page Transitions**: Crossfade (200ms) - smooth but imperceptible
-- **Loading States**: Gentle skeleton pulse (1.5s loop) - indicates progress without anxiety
+- **Revenue Counter**: Animated number increments with easing (600ms) - satisfying value reveal
+- **Chart Entrance**: Staggered line/bar animation (800ms) - data storytelling
+- **Store Switch**: Crossfade with subtle slide (300ms) - smooth context change
+- **Notification Badge**: Gentle pulse (1.5s loop) - draws attention without annoyance
+- **Card Interactions**: Subtle lift on hover (150ms) - depth and interactivity
+- **Report Generation**: Progress indicator with completion celebration (varies) - process feedback
+- **Stat Updates**: Number morph animation (400ms) - live data feel
+- **Tab Navigation**: Content slide transition (250ms) - spatial consistency
+- **Success Actions**: Checkmark scale-in + color flash (300ms) - confirmation delight
 
 ## Component Selection
 
 **Components**:
-- **Card**: Product display with shadcn Card component; add colored left border for urgency indicator (4px solid border-l)
-- **Button**: Primary actions use shadcn Button with size="lg" for easy mobile taps; secondary actions use variant="outline"
-- **Dialog**: Add product form uses shadcn Dialog for modal overlay; keeps focus on task
-- **Form**: React Hook Form + Zod validation with shadcn Form components for inputs
-- **Input**: Standard shadcn Input with increased touch targets (min-h-12)
-- **Select**: Category selection with shadcn Select component
-- **Badge**: Discount percentage display with custom color variants
-- **Calendar**: Date picker using shadcn Calendar component for expiry date selection
-- **Separator**: Visual dividers between urgency sections
-- **Stats Cards**: Custom component using Card base with icon, label, and large number
+- **Tabs**: Main navigation between Dashboard, Products, Activity, Reports using shadcn Tabs
+- **Charts**: Revenue trends using recharts with custom SaaS styling
+- **Store Selector**: shadcn Select with store switching in header
+- **Revenue Cards**: Custom stat cards with trend indicators and sparklines
+- **Data Table**: Activity log using shadcn Table with sorting
+- **Card**: Product and metric displays
+- **Button**: Actions with clear hierarchy (primary/secondary/ghost)
+- **Dialog**: Modals for add product, store creation, report viewing
+- **Badge**: Status indicators and notification counts
+- **Separator**: Visual section dividers
+- **Calendar**: Date pickers for reports and product expiry
+- **Progress**: Revenue goal tracking
 
 **Customizations**:
-- **Urgency Indicators**: Color-coded left border on cards (red/orange/yellow/blue based on days)
-- **Print Label**: Custom component with optimized print stylesheet
-- **Floating Action Button**: Custom positioned button with Plus icon from phosphor-icons
-- **Empty States**: Custom illustrations with helpful copy
-- **Price Display**: Custom component with strikethrough old price and bold new price
+- **Revenue Dashboard**: Custom 3-column grid with large revenue cards, trend charts, and quick stats
+- **Store Performance Cards**: Comparison view with side-by-side metrics
+- **Activity Timeline**: Custom timeline component showing staff actions
+- **Notification Panel**: Custom dropdown with unread count badge
+- **Weekly Report**: Custom report layout with charts and insights
+- **Smart Discount Display**: Shows base discount + modifiers (category, time-of-day)
 
 **States**:
-- **Buttons**: Default (solid bg) → Hover (slightly darker, subtle lift shadow) → Active (scale 0.98) → Disabled (opacity 50%, no interaction)
-- **Cards**: Default (white bg, subtle border) → Hover (shadow-md, slight lift) → Selected (primary border)
-- **Inputs**: Default (border) → Focus (ring-2 ring-primary) → Error (ring-destructive, error message below) → Filled (border-primary)
-- **Product Status**: Pending (neutral) → Discounted (success badge) → Labeled (complete badge) → Expired (danger badge)
+- **Navigation Tabs**: Default → Hover (subtle highlight) → Active (underline + bold) → Disabled (opacity 50%)
+- **Store Selector**: Shows active store name; dropdown shows all stores with performance indicators
+- **Revenue Cards**: Static display with animated numbers on update
+- **Charts**: Hover shows tooltip with exact values; click to drill down
+- **Activity Rows**: Hover highlights row; shows additional actions
 
 **Icon Selection**:
-- Plus (add product)
-- Calendar (expiry date)
-- Tag (discount/price)
-- Printer (print label)
-- TrendingUp (revenue stats)
-- Clock (urgency indicator)
-- ShoppingCart (category: general)
-- Apple (produce)
-- Drop (dairy)
-- Fish (meat/seafood)
-- Package (packaged goods)
-- TrashSimple (remove expired)
-- CheckCircle (action complete)
+- ChartLine (revenue dashboard)
+- Buildings (multi-store)
+- ClockCountdown (time-based discounts)
+- UserCircle (staff tracking)
+- Bell (notifications)
+- FileText (reports)
+- TrendUp (positive metrics)
+- TrendDown (missed opportunities)
+- Calendar (date ranges)
+- Funnel (category filters)
 
 **Spacing**:
-- Page padding: p-4 (mobile), p-6 (tablet+)
-- Card spacing: p-4 internal, gap-3 between elements
-- Section gaps: gap-6 between major sections
-- Stats grid: gap-4 between stat cards
-- Form fields: gap-4 vertical spacing
-- Button groups: gap-2 horizontal
+- Dashboard grid: gap-6 between major sections
+- Revenue cards: p-6 internal padding
+- Charts: mb-8 bottom margin for breathing room
+- Data tables: p-4 cell padding
+- Navigation: px-8 horizontal page padding on desktop
 
 **Mobile**:
-- Single column layout throughout (no breakpoint switching needed)
-- Bottom-fixed floating action button (Add Product)
-- Stats cards: 2-column grid on mobile, 4-column on tablet+
-- Touch targets minimum 44px height
-- Simplified product cards on mobile: stack info vertically
-- Print labels: Full-screen overlay on mobile for preview
-- Sticky header with app title
-- Generous spacing (never cramped)
+- Tabs convert to bottom navigation bar on mobile
+- Revenue cards stack vertically
+- Charts scale to full width with horizontal scroll for detail
+- Store selector moves to slide-out menu
+- Activity log shows condensed view with expand for details
+- Reports optimized for portrait viewing
