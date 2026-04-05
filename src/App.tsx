@@ -38,11 +38,69 @@ function App() {
 
   useEffect(() => {
     if (!stores || stores.length === 0) {
-      setCreateStoreDialogOpen(true)
+      const demoStore: Store = {
+        id: 'store-demo-1',
+        name: 'FreshMart Downtown',
+        location: '123 Main St',
+        createdAt: new Date().toISOString()
+      }
+      
+      setStores([demoStore])
+      setCurrentStoreId(demoStore.id)
+      
+      const today = new Date()
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
+      
+      const demoProducts: Product[] = [
+        {
+          id: 'product-demo-1',
+          name: 'Organic Chicken Breast',
+          category: 'meat',
+          originalPrice: 9.99,
+          expiryDate: formatDate(today),
+          status: 'pending',
+          dateAdded: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+          storeId: demoStore.id
+        },
+        {
+          id: 'product-demo-2',
+          name: 'Fresh Whole Milk',
+          category: 'dairy',
+          originalPrice: 4.99,
+          expiryDate: formatDate(tomorrow),
+          status: 'pending',
+          dateAdded: new Date(today.getTime() - 3 * 60 * 60 * 1000).toISOString(),
+          storeId: demoStore.id
+        },
+        {
+          id: 'product-demo-3',
+          name: 'Caesar Salad Mix',
+          category: 'produce',
+          originalPrice: 3.49,
+          expiryDate: formatDate(tomorrow),
+          status: 'pending',
+          dateAdded: new Date(today.getTime() - 1 * 60 * 60 * 1000).toISOString(),
+          storeId: demoStore.id
+        }
+      ]
+      
+      setProducts(demoProducts)
+      
+      toast.success('Welcome to FreshSave Pro!', {
+        description: 'Demo data loaded. Start by applying discounts to expiring items.'
+      })
     } else if (!currentStoreId && stores.length > 0) {
       setCurrentStoreId(stores[0].id)
     }
-  }, [stores, currentStoreId])
+  }, [stores, currentStoreId, setStores, setProducts])
 
   useEffect(() => {
     if (!currentStoreId) return
