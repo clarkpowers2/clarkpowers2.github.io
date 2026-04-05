@@ -513,29 +513,29 @@ function App() {
       
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Storefront size={28} weight="fill" className="text-primary" />
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                <Storefront size={24} weight="fill" className="text-primary sm:w-7 sm:h-7" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">FreshSave Pro</h1>
-                <p className="text-xs text-muted-foreground">Multi-Store Revenue Recovery</p>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold tracking-tight truncate">FreshSave Pro</h1>
+                <p className="text-xs text-muted-foreground hidden sm:block">Multi-Store Revenue Recovery</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               {unreadNotifications.length > 0 && (
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell size={20} weight="bold" />
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-destructive text-destructive-foreground">
+                <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10">
+                  <Bell size={18} weight="bold" className="sm:w-5 sm:h-5" />
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-destructive text-destructive-foreground text-xs">
                     {unreadNotifications.length}
                   </Badge>
                 </Button>
               )}
 
               <Select value={currentStoreId} onValueChange={setCurrentStoreId}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-[140px] sm:w-[200px] h-9 sm:h-10">
                   <SelectValue placeholder="Select store" />
                 </SelectTrigger>
                 <SelectContent>
@@ -551,9 +551,18 @@ function App() {
                 onClick={() => setCreateStoreDialogOpen(true)}
                 variant="outline"
                 size="sm"
+                className="hidden sm:flex"
               >
                 <Plus size={16} weight="bold" className="mr-2" />
                 New Store
+              </Button>
+              <Button 
+                onClick={() => setCreateStoreDialogOpen(true)}
+                variant="outline"
+                size="icon"
+                className="sm:hidden h-9 w-9"
+              >
+                <Plus size={18} weight="bold" />
               </Button>
             </div>
           </div>
@@ -562,35 +571,35 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 pb-24">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-6xl grid-cols-6">
-            <TabsTrigger value="dashboard" className="gap-2">
-              <ChartLine size={16} weight="bold" />
-              Dashboard
+          <TabsList className="grid w-full max-w-6xl grid-cols-3 sm:grid-cols-6 gap-1">
+            <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <ChartLine size={16} weight="bold" className="shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="products" className="gap-2">
-              <Package size={16} weight="bold" />
-              Products
+            <TabsTrigger value="products" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Package size={16} weight="bold" className="shrink-0" />
+              <span className="hidden sm:inline">Products</span>
             </TabsTrigger>
-            <TabsTrigger value="audit" className="gap-2">
-              <Receipt size={16} weight="bold" />
-              Audit
+            <TabsTrigger value="audit" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Receipt size={16} weight="bold" className="shrink-0" />
+              <span className="hidden sm:inline">Audit</span>
             </TabsTrigger>
-            <TabsTrigger value="alerts" className="gap-2">
-              <Bell size={16} weight="bold" />
-              Alerts
+            <TabsTrigger value="alerts" className="gap-1 sm:gap-2 text-xs sm:text-sm relative">
+              <Bell size={16} weight="bold" className="shrink-0" />
+              <span className="hidden sm:inline">Alerts</span>
               {unreadNotifications.length > 0 && (
-                <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center bg-destructive text-destructive-foreground">
+                <Badge className="absolute -top-1 -right-1 sm:relative sm:top-0 sm:right-0 sm:ml-1 h-5 w-5 p-0 flex items-center justify-center bg-destructive text-destructive-foreground text-xs">
                   {unreadNotifications.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="calculator" className="gap-2">
-              <Calculator size={16} weight="bold" />
-              Calculator
+            <TabsTrigger value="calculator" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Calculator size={16} weight="bold" className="shrink-0" />
+              <span className="hidden sm:inline">Calculator</span>
             </TabsTrigger>
-            <TabsTrigger value="activity" className="gap-2">
-              <ClockCountdown size={16} weight="bold" />
-              Activity
+            <TabsTrigger value="activity" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <ClockCountdown size={16} weight="bold" className="shrink-0" />
+              <span className="hidden sm:inline">Activity</span>
             </TabsTrigger>
           </TabsList>
 
@@ -817,31 +826,31 @@ function App() {
         </Tabs>
       </main>
 
-      <div className="fixed bottom-6 right-6 flex flex-col gap-3 no-print">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col gap-2 sm:gap-3 no-print z-50">
         <Button
           onClick={() => setAiChatBotOpen(!aiChatBotOpen)}
           size="lg"
           variant={aiChatBotOpen ? "default" : "secondary"}
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
         >
-          <Brain size={24} weight="bold" />
+          <Brain size={20} weight="bold" className="sm:w-6 sm:h-6" />
         </Button>
         <Button
           onClick={() => setScannerDialogOpen(true)}
           size="lg"
           variant="secondary"
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
           disabled={!currentStoreId}
         >
-          <Scan size={24} weight="bold" />
+          <Scan size={20} weight="bold" className="sm:w-6 sm:h-6" />
         </Button>
         <Button
           onClick={() => setAddDialogOpen(true)}
           size="lg"
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
           disabled={!currentStoreId}
         >
-          <Plus size={24} weight="bold" />
+          <Plus size={20} weight="bold" className="sm:w-6 sm:h-6" />
         </Button>
       </div>
 
