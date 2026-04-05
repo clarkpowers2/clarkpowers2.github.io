@@ -75,6 +75,13 @@ This is a production-ready MVP with intelligent discounting, multi-store managem
 - **Progression**: Click add product → Enter details or scan barcode/expiry date → Camera opens → Barcode detected or image captured → OCR extracts date → Auto-fills form → Complete and save
 - **Success criteria**: Original workflow uncompromised; scanning reduces manual entry time by 70%
 
+### Professional Print Label System (Enhanced)
+- **Functionality**: Advanced label printing with support for thermal printers, label machines, and standard printers. Offers multiple label sizes (2"×1", 3"×2", 4"×2", standard 4"×6"), printer type selection (browser print, thermal, label machine, standard), real-time preview, barcode generation, on-screen confirmation, and seamless workflow completion.
+- **Purpose**: Connect to any physical printer or label machine in the store for professional-quality price labels with clear on-screen confirmation workflow
+- **Trigger**: Click "Print Label" button on discounted product
+- **Progression**: Click Print Label → Select printer type (thermal/label machine/browser/standard) → Choose label size → Preview label with barcode → Click Print → System connects to printer → Print job sent → Success animation appears → Click "Confirm Printed" button → Product marked as labeled → Ready for shelf placement
+- **Success criteria**: Works with all printer types via browser print API or USB connection; supports standard label sizes used in grocery stores; provides clear confirmation that label was printed; generates professional labels with barcodes; smooth workflow from discount to shelf-ready product
+
 ## Edge Case Handling
 
 - **Expired Products** - Separate section with remove option; contribute to "missed opportunities" metric
@@ -95,6 +102,11 @@ This is a production-ready MVP with intelligent discounting, multi-store managem
 - **Category-Specific Logic** - Discount calculations account for all four categories (Meat, Fruit, Dairy, Dry Goods); missing category defaults to lowest modifier
 - **Zero Days Until Expiry** - Products expiring today receive maximum urgency and prominent placement in Today's Action List
 - **Manual Discount Overrides** - Custom percentages bypass automatic calculations while maintaining category display
+- **Printer Connection Failure** - Clear error message with retry option; fallback to manual confirmation
+- **Label Size Mismatch** - Preview adjusts to selected size before printing
+- **USB Printer Not Detected** - Graceful fallback to browser print with instruction message
+- **Print Job Incomplete** - On-screen confirmation button allows staff to verify before marking as printed
+- **Multiple Label Prints** - Can reprint labels if needed; doesn't duplicate product status
 
 ## Design Direction
 
@@ -203,6 +215,9 @@ Animations should feel sophisticated and purposeful - reinforcing the premium Sa
 - TextAa (OCR text recognition)
 - Scan (scanning indicator)
 - CheckCircle (scan success)
+- Printer (print label)
+- DeviceMobile (mobile/label printer)
+- Desktop (desktop printer)
 
 **Spacing**:
 - Dashboard grid: gap-6 between major sections

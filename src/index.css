@@ -106,6 +106,7 @@
 @media print {
   body {
     background: white;
+    color: black;
   }
   
   .no-print {
@@ -114,5 +115,17 @@
   
   .print-only {
     display: block !important;
+  }
+  
+  #print-label {
+    border: 2px solid black !important;
+    page-break-inside: avoid;
+    background: white !important;
+    color: black !important;
+  }
+  
+  @page {
+    size: auto;
+    margin: 0.5cm;
   }
 }
