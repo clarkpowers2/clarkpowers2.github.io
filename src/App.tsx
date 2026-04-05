@@ -73,12 +73,18 @@ function App() {
         return `${year}-${month}-${day}`
       }
       
+      const twoDaysOut = new Date(today)
+      twoDaysOut.setDate(twoDaysOut.getDate() + 2)
+      
+      const threeDaysOut = new Date(today)
+      threeDaysOut.setDate(threeDaysOut.getDate() + 3)
+
       const demoProducts: Product[] = [
         {
           id: 'product-demo-1',
           name: 'Organic Chicken Breast',
           category: 'meat',
-          originalPrice: 9.99,
+          originalPrice: 12.99,
           expiryDate: formatDate(today),
           status: 'pending',
           dateAdded: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString(),
@@ -86,22 +92,72 @@ function App() {
         },
         {
           id: 'product-demo-2',
-          name: 'Fresh Whole Milk',
+          name: 'Fresh Whole Milk (1 Gallon)',
+          category: 'dairy',
+          originalPrice: 5.49,
+          expiryDate: formatDate(tomorrow),
+          status: 'pending',
+          dateAdded: new Date(today.getTime() - 4 * 60 * 60 * 1000).toISOString(),
+          storeId: demoStore.id
+        },
+        {
+          id: 'product-demo-3',
+          name: 'Organic Strawberries',
+          category: 'fruit',
+          originalPrice: 6.99,
+          expiryDate: formatDate(today),
+          status: 'pending',
+          dateAdded: new Date(today.getTime() - 1 * 60 * 60 * 1000).toISOString(),
+          storeId: demoStore.id
+        },
+        {
+          id: 'product-demo-4',
+          name: 'Premium Ground Beef (1lb)',
+          category: 'meat',
+          originalPrice: 8.99,
+          expiryDate: formatDate(tomorrow),
+          status: 'pending',
+          dateAdded: new Date(today.getTime() - 5 * 60 * 60 * 1000).toISOString(),
+          storeId: demoStore.id
+        },
+        {
+          id: 'product-demo-5',
+          name: 'Greek Yogurt 4-Pack',
           category: 'dairy',
           originalPrice: 4.99,
-          expiryDate: formatDate(tomorrow),
+          expiryDate: formatDate(twoDaysOut),
           status: 'pending',
           dateAdded: new Date(today.getTime() - 3 * 60 * 60 * 1000).toISOString(),
           storeId: demoStore.id
         },
         {
-          id: 'product-demo-3',
-          name: 'Mixed Berry Pack',
+          id: 'product-demo-6',
+          name: 'Fresh Spinach Bunch',
           category: 'fruit',
           originalPrice: 3.49,
           expiryDate: formatDate(tomorrow),
           status: 'pending',
-          dateAdded: new Date(today.getTime() - 1 * 60 * 60 * 1000).toISOString(),
+          dateAdded: new Date(today.getTime() - 6 * 60 * 60 * 1000).toISOString(),
+          storeId: demoStore.id
+        },
+        {
+          id: 'product-demo-7',
+          name: 'Atlantic Salmon Fillet',
+          category: 'meat',
+          originalPrice: 14.99,
+          expiryDate: formatDate(today),
+          status: 'pending',
+          dateAdded: new Date(today.getTime() - 7 * 60 * 60 * 1000).toISOString(),
+          storeId: demoStore.id
+        },
+        {
+          id: 'product-demo-8',
+          name: 'Organic Bananas (bunch)',
+          category: 'fruit',
+          originalPrice: 2.99,
+          expiryDate: formatDate(threeDaysOut),
+          status: 'pending',
+          dateAdded: new Date(today.getTime() - 8 * 60 * 60 * 1000).toISOString(),
           storeId: demoStore.id
         }
       ]
@@ -109,7 +165,7 @@ function App() {
       setProducts(demoProducts)
       
       toast.success('Welcome to FreshSave Pro!', {
-        description: 'Demo data loaded. Start by applying discounts to expiring items.'
+        description: `Demo store loaded with ${demoProducts.length} sample products. Start by reviewing Today's Action List.`
       })
     } else if (!currentStoreId && stores.length > 0) {
       setCurrentStoreId(stores[0].id)
@@ -233,63 +289,73 @@ function App() {
       return
     }
 
-    const newProduct: Product = {
-      ...productData,
-      id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      status: 'pending',
-      dateAdded: new Date().toISOString(),
-      storeId: currentStoreId
-    }
-    
-    setProducts(current => [...(current || []), newProduct])
+    try {
+      const newProduct: Product = {
+        ...productData,
+        id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        status: 'pending',
+        dateAdded: new Date().toISOString(),
+        storeId: currentStoreId
+      }
+      
+      setProducts(current => [...(current || []), newProduct])
 
-    const activity: Activity = {
-      id: `activity-${Date.now()}`,
-      storeId: currentStoreId,
-      productId: newProduct.id,
-      productName: newProduct.name,
-      action: 'product_added',
-      staffMember: 'Current User',
-      timestamp: new Date().toISOString()
-    }
-    setActivities(current => [...(current || []), activity])
+      const activity: Activity = {
+        id: `activity-${Date.now()}`,
+        storeId: currentStoreId,
+        productId: newProduct.id,
+        productName: newProduct.name,
+        action: 'product_added',
+        staffMember: 'Current User',
+        timestamp: new Date().toISOString()
+      }
+      setActivities(current => [...(current || []), activity])
 
-    toast.success('Product added successfully!')
+      toast.success('Product added successfully!')
+    } catch (error) {
+      console.error('Error adding product:', error)
+      toast.error('Failed to add product. Please try again.')
+    }
   }
 
   const handleApplyDiscount = (product: Product) => {
-    const discountInfo = calculateDiscountInfo(product)
-    
-    setProducts(current =>
-      (current || []).map(p =>
-        p.id === product.id ? { 
-          ...p, 
-          status: 'discounted' as const,
-          discountedBy: 'Current User',
-          discountedAt: new Date().toISOString()
-        } : p
+    try {
+      const discountInfo = calculateDiscountInfo(product)
+      
+      setProducts(current =>
+        (current || []).map(p =>
+          p.id === product.id ? { 
+            ...p, 
+            status: 'discounted' as const,
+            discountedBy: 'Current User',
+            discountedAt: new Date().toISOString()
+          } : p
+        )
       )
-    )
 
-    const activity: Activity = {
-      id: `activity-${Date.now()}`,
-      storeId: currentStoreId,
-      productId: product.id,
-      productName: product.name,
-      action: 'discount_applied',
-      staffMember: 'Current User',
-      timestamp: new Date().toISOString(),
-      metadata: {
-        originalPrice: product.originalPrice,
-        discountedPrice: discountInfo.discountedPrice,
-        discountPercentage: discountInfo.discountPercentage
+      const activity: Activity = {
+        id: `activity-${Date.now()}`,
+        storeId: currentStoreId,
+        productId: product.id,
+        productName: product.name,
+        action: 'discount_applied',
+        staffMember: 'Current User',
+        timestamp: new Date().toISOString(),
+        metadata: {
+          originalPrice: product.originalPrice,
+          discountedPrice: discountInfo.discountedPrice,
+          discountPercentage: discountInfo.discountPercentage
+        }
       }
-    }
-    setActivities(current => [...(current || []), activity])
+      setActivities(current => [...(current || []), activity])
 
-    toast.success('Discount applied!', {
-      description: `${discountInfo.discountPercentage}% off - Ready to print label`
-    })
+      toast.success('Discount applied!', {
+        description: `${discountInfo.discountPercentage}% off - Ready to print label`
+      })
+    } catch (error) {
+      console.error('Error applying discount:', error)
+      toast.error('Failed to apply discount. Please try again.')
+    }
   }
 
   const handleCustomDiscount = (product: Product) => {

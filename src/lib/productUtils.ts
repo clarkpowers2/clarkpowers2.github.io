@@ -1,16 +1,29 @@
 import { Product, DiscountInfo } from './types'
 
 export function calculateDaysUntilExpiry(expiryDate: string): number {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  
-  const expiry = new Date(expiryDate)
-  expiry.setHours(0, 0, 0, 0)
-  
-  const diffTime = expiry.getTime() - today.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  
-  return diffDays
+  try {
+    if (!expiryDate) return 0
+    
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const expiry = new Date(expiryDate)
+    
+    if (isNaN(expiry.getTime())) {
+      console.warn('Invalid expiry date:', expiryDate)
+      return 0
+    }
+    
+    expiry.setHours(0, 0, 0, 0)
+    
+    const diffTime = expiry.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    return diffDays
+  } catch (error) {
+    console.error('Error calculating days until expiry:', error)
+    return 0
+  }
 }
 
 export function getCategoryModifier(category: Product['category']): number {
@@ -46,36 +59,48 @@ export function getBaseDiscountPercentage(daysUntilExpiry: number): number {
 }
 
 export function calculateDiscountInfo(product: Product): DiscountInfo {
-  const daysUntilExpiry = calculateDaysUntilExpiry(product.expiryDate)
-  const baseDiscount = getBaseDiscountPercentage(daysUntilExpiry)
-  const categoryModifier = getCategoryModifier(product.category)
-  const timeModifier = getTimeModifier()
-  
-  const totalDiscount = product.customDiscountPercentage !== undefined 
-    ? product.customDiscountPercentage 
-    : Math.min(baseDiscount + categoryModifier + timeModifier, 75)
-  
-  const discountedPrice = product.originalPrice * (1 - totalDiscount / 100)
-  
-  let urgencyLevel: DiscountInfo['urgencyLevel'] = 'low'
-  
-  if (daysUntilExpiry <= 0) {
-    urgencyLevel = 'expired'
-  } else if (daysUntilExpiry === 1) {
-    urgencyLevel = 'critical'
-  } else if (daysUntilExpiry === 2) {
-    urgencyLevel = 'high'
-  } else if (daysUntilExpiry === 3) {
-    urgencyLevel = 'medium'
-  }
-  
-  return {
-    daysUntilExpiry,
-    discountPercentage: totalDiscount,
-    discountedPrice,
-    urgencyLevel,
-    categoryModifier,
-    timeModifier
+  try {
+    const daysUntilExpiry = calculateDaysUntilExpiry(product.expiryDate)
+    const baseDiscount = getBaseDiscountPercentage(daysUntilExpiry)
+    const categoryModifier = getCategoryModifier(product.category)
+    const timeModifier = getTimeModifier()
+    
+    const totalDiscount = product.customDiscountPercentage !== undefined 
+      ? Math.min(Math.max(product.customDiscountPercentage, 0), 100)
+      : Math.min(baseDiscount + categoryModifier + timeModifier, 75)
+    
+    const discountedPrice = Math.max(product.originalPrice * (1 - totalDiscount / 100), 0.01)
+    
+    let urgencyLevel: DiscountInfo['urgencyLevel'] = 'low'
+    
+    if (daysUntilExpiry <= 0) {
+      urgencyLevel = 'expired'
+    } else if (daysUntilExpiry === 1) {
+      urgencyLevel = 'critical'
+    } else if (daysUntilExpiry === 2) {
+      urgencyLevel = 'high'
+    } else if (daysUntilExpiry === 3) {
+      urgencyLevel = 'medium'
+    }
+    
+    return {
+      daysUntilExpiry,
+      discountPercentage: Math.round(totalDiscount * 10) / 10,
+      discountedPrice: Math.round(discountedPrice * 100) / 100,
+      urgencyLevel,
+      categoryModifier,
+      timeModifier
+    }
+  } catch (error) {
+    console.error('Error calculating discount info:', error)
+    return {
+      daysUntilExpiry: 0,
+      discountPercentage: 0,
+      discountedPrice: product.originalPrice || 0,
+      urgencyLevel: 'expired',
+      categoryModifier: 0,
+      timeModifier: 0
+    }
   }
 }
 

@@ -33,22 +33,48 @@ export function AddProductDialog({ open, onOpenChange, onAdd }: AddProductDialog
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!name || !price || !expiryDate) {
+    if (!name.trim()) {
+      toast.error('Product name is required')
       return
     }
     
-    onAdd({
-      name,
-      category,
-      originalPrice: parseFloat(price),
-      expiryDate: format(expiryDate, 'yyyy-MM-dd')
-    })
+    if (!price || parseFloat(price) <= 0) {
+      toast.error('Please enter a valid price greater than $0')
+      return
+    }
     
-    setName('')
-    setCategory('fruit')
-    setPrice('')
-    setExpiryDate(undefined)
-    onOpenChange(false)
+    if (!expiryDate) {
+      toast.error('Please select an expiry date')
+      return
+    }
+    
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const selectedDate = new Date(expiryDate)
+    selectedDate.setHours(0, 0, 0, 0)
+    
+    if (selectedDate < today) {
+      toast.error('Expiry date cannot be in the past')
+      return
+    }
+    
+    try {
+      onAdd({
+        name: name.trim(),
+        category,
+        originalPrice: parseFloat(price),
+        expiryDate: format(expiryDate, 'yyyy-MM-dd')
+      })
+      
+      setName('')
+      setCategory('fruit')
+      setPrice('')
+      setExpiryDate(undefined)
+      onOpenChange(false)
+    } catch (error) {
+      toast.error('Failed to add product. Please try again.')
+      console.error('Add product error:', error)
+    }
   }
 
   const handleScanComplete = (data: { expiryDate: string; productName?: string; barcode?: string }) => {

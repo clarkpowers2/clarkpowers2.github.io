@@ -1,14 +1,14 @@
-# FreshSave Pro - Multi-Store Revenue Recovery Platform
+# FreshSave Pro - Production-Ready Revenue Recovery Platform
 
-A scalable SaaS platform that helps grocery chains reduce waste and recover revenue across multiple store locations through intelligent discounting, analytics, and automation.
+A demo-ready, stable revenue recovery platform that helps grocery stores reduce waste and recover revenue through intelligent discounting. Built for reliable store demonstrations with local data persistence.
 
 **Experience Qualities**:
-1. **Professional** - Premium SaaS interface that demonstrates ROI and business value at every touchpoint
-2. **Insightful** - Data-driven dashboards that reveal revenue opportunities and performance trends
-3. **Scalable** - Multi-tenant architecture supporting chains with multiple locations and staff members
+1. **Stable & Reliable** - Zero-crash experience with comprehensive error handling and data validation at every touchpoint
+2. **Professional** - Polished interface that demonstrates clear ROI and business value immediately upon opening
+3. **Intuitive** - Staff can learn the core workflow in under 2 minutes with obvious, guided actions
 
-**Complexity Level**: Complex Application (advanced functionality with multiple views)
-This is a full-featured SaaS platform with revenue analytics, multi-store management, staff tracking, smart discount automation, and reporting capabilities. The architecture supports multi-tenancy, role-based features, and data aggregation across stores while maintaining the simplicity of the original workflow.
+**Complexity Level**: Light Application (multiple features with robust state management)
+This is a production-ready MVP with intelligent discounting, multi-store management, real-time analytics, and persistent data storage. The architecture prioritizes reliability, smooth demo experience, and graceful error handling to ensure the app never crashes during customer presentations.
 
 ## Essential Features
 
