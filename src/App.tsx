@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useKV } from '@github/spark/hooks'
-import { Product, Store, Activity, Notification } from '@/lib/types'
+import { Product, Store, Activity, Notification, PrinterUsageStats } from '@/lib/types'
 import { calculateRevenueMetrics, calculatePotentialRevenue, generateRevenueChartData } from '@/lib/analytics'
+import { createPrinterUsageRecord } from '@/lib/printerAnalytics'
 import { RevenueCard } from '@/components/RevenueCard'
 import { RevenueChart } from '@/components/RevenueChart'
 import { ActivityLog } from '@/components/ActivityLog'
@@ -18,6 +19,7 @@ import { AIChatBot } from '@/components/AIChatBot'
 import { TodaysActionList } from '@/components/TodaysActionList'
 import { RealtimeAudit } from '@/components/RealtimeAudit'
 import { BulkPrinterMode } from '@/components/BulkPrinterMode'
+import { WeeklyReportGenerator } from '@/components/WeeklyReportGenerator'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -26,7 +28,7 @@ import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { 
   Plus, ChartLine, Package, ClockCountdown, Storefront,
-  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain, Scan, Receipt, Printer
+  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain, Scan, Receipt, Printer, FileText
 } from '@phosphor-icons/react'
 import { toast, Toaster } from 'sonner'
 import { calculateDiscountInfo, calculateDaysUntilExpiry } from '@/lib/productUtils'
@@ -37,6 +39,7 @@ function App() {
   const [stores, setStores] = useKV<Store[]>('freshsave-pro-stores', [])
   const [activities, setActivities] = useKV<Activity[]>('freshsave-pro-activities', [])
   const [notifications, setNotifications] = useKV<Notification[]>('freshsave-pro-notifications', [])
+  const [printerUsageStats, setPrinterUsageStats] = useKV<PrinterUsageStats[]>('freshsave-pro-printer-usage', [])
   const [currentStoreId, setCurrentStoreId] = useState<string>('')
   
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -430,7 +433,27 @@ function App() {
     setPrintDialogOpen(true)
   }
 
-  const handlePrinted = (productId: string) => {
+  const handlePrinted = (productId: string, printerType: string, labelSize: string) => {
+    const product = storeProducts.find(p => p.id === productId)
+    
+    if (product) {
+      const printerTypeMapping: Record<string, 'thermal' | 'label-machine' | 'standard' | 'browser'> = {
+        'thermal': 'thermal',
+        'label': 'label-machine',
+        'standard': 'standard',
+        'browser': 'browser'
+      }
+      
+      const usageRecord = createPrinterUsageRecord(
+        currentStoreId,
+        product,
+        printerTypeMapping[printerType] || 'browser',
+        labelSize
+      )
+      
+      setPrinterUsageStats(current => [...(current || []), usageRecord])
+    }
+    
     setProducts(current =>
       (current || []).map(p =>
         p.id === productId ? { 
@@ -442,7 +465,6 @@ function App() {
       )
     )
 
-    const product = storeProducts.find(p => p.id === productId)
     if (product) {
       const activity: Activity = {
         id: `activity-${Date.now()}`,
@@ -573,7 +595,7 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 pb-24">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-6xl grid-cols-3 sm:grid-cols-6 gap-1">
+          <TabsList className="grid w-full max-w-6xl grid-cols-4 sm:grid-cols-7 gap-1">
             <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <ChartLine size={16} weight="bold" className="shrink-0" />
               <span className="hidden sm:inline">Dashboard</span>
@@ -598,6 +620,10 @@ function App() {
             <TabsTrigger value="calculator" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <Calculator size={16} weight="bold" className="shrink-0" />
               <span className="hidden sm:inline">Calculator</span>
+            </TabsTrigger>
+            <TabsTrigger value="report" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <FileText size={16} weight="bold" className="shrink-0" />
+              <span className="hidden sm:inline">Report</span>
             </TabsTrigger>
             <TabsTrigger value="activity" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <ClockCountdown size={16} weight="bold" className="shrink-0" />
@@ -840,6 +866,16 @@ function App() {
             <PriceCalculator />
           </TabsContent>
 
+          <TabsContent value="report">
+            <WeeklyReportGenerator
+              products={storeProducts}
+              activities={storeActivities}
+              printerUsageStats={(printerUsageStats || []).filter(s => s.storeId === currentStoreId)}
+              storeId={currentStoreId}
+              storeName={currentStore?.name || 'Store'}
+            />
+          </TabsContent>
+
           <TabsContent value="activity">
             <ActivityLog activities={storeActivities} />
           </TabsContent>
@@ -924,7 +960,7 @@ function App() {
         onOpenChange={setBulkPrinterOpen}
         products={storeProducts}
         onPrintComplete={(productIds) => {
-          productIds.forEach(id => handlePrinted(id))
+          productIds.forEach(id => handlePrinted(id, 'browser', 'standard'))
         }}
       />
     </div>

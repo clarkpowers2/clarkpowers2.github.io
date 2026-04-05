@@ -111,3 +111,28 @@ export interface WeeklyReport {
   }>
   generatedAt: string
 }
+
+export interface PrinterUsageStats {
+  id: string
+  storeId: string
+  printerType: 'thermal' | 'label-machine' | 'standard' | 'browser'
+  labelsPrinted: number
+  labelSize: string
+  costPerLabel: number
+  totalCost: number
+  timestamp: string
+  productId: string
+  productName: string
+}
+
+export interface LabelCostSettings {
+  storeId: string
+  costs: {
+    'thermal-small': number
+    'thermal-medium': number
+    'thermal-large': number
+    'standard': number
+  }
+  currency: string
+  updatedAt: string
+}

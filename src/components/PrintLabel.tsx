@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Product } from '@/lib/types'
+import { Product, PrinterUsageStats } from '@/lib/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { calculateDiscountInfo, formatCurrency } from '@/lib/productUtils'
-import { Printer, CheckCircle, Barcode, DeviceMobile, Desktop } from '@phosphor-icons/react'
+import { calculateLabelCost } from '@/lib/printerAnalytics'
+import { Printer, CheckCircle, Barcode, DeviceMobile, Desktop, CurrencyDollar } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -13,7 +14,7 @@ interface PrintLabelProps {
   product: Product | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onPrinted: (productId: string) => void
+  onPrinted: (productId: string, printerType: string, labelSize: string) => void
 }
 
 type PrinterType = 'browser' | 'thermal' | 'label' | 'standard'
@@ -28,6 +29,7 @@ export function PrintLabel({ product, open, onOpenChange, onPrinted }: PrintLabe
   if (!product) return null
   
   const discountInfo = calculateDiscountInfo(product)
+  const labelCost = calculateLabelCost(labelSize, printerType)
   
   const handlePrint = async () => {
     setIsPrinting(true)
@@ -41,11 +43,11 @@ export function PrintLabel({ product, open, onOpenChange, onPrinted }: PrintLabe
       
       setPrintSuccess(true)
       toast.success('Label printed successfully!', {
-        description: 'Product has been marked as labeled'
+        description: `Cost: $${labelCost.toFixed(3)} • Product marked as labeled`
       })
       
       setTimeout(() => {
-        onPrinted(product.id)
+        onPrinted(product.id, printerType, labelSize)
         onOpenChange(false)
         setPrintSuccess(false)
       }, 1500)
@@ -83,7 +85,7 @@ export function PrintLabel({ product, open, onOpenChange, onPrinted }: PrintLabe
   }
 
   const handleConfirmPrinted = () => {
-    onPrinted(product.id)
+    onPrinted(product.id, printerType, labelSize)
     onOpenChange(false)
     setPrintSuccess(false)
   }
@@ -176,6 +178,11 @@ export function PrintLabel({ product, open, onOpenChange, onPrinted }: PrintLabe
             <span className="text-sm text-muted-foreground">
               Label preview shown below
             </span>
+            <div className="ml-auto flex items-center gap-1.5 text-xs">
+              <CurrencyDollar size={14} className="text-muted-foreground" />
+              <span className="font-medium">${labelCost.toFixed(3)}</span>
+              <span className="text-muted-foreground">per label</span>
+            </div>
           </div>
         </div>
         
