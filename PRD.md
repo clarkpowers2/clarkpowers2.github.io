@@ -82,6 +82,13 @@ This is a production-ready MVP with intelligent discounting, multi-store managem
 - **Progression**: Click Print Label → Select printer type (thermal/label machine/browser/standard) → Choose label size → Preview label with barcode → Click Print → System connects to printer → Print job sent → Success animation appears → Click "Confirm Printed" button → Product marked as labeled → Ready for shelf placement
 - **Success criteria**: Works with all printer types via browser print API or USB connection; supports standard label sizes used in grocery stores; provides clear confirmation that label was printed; generates professional labels with barcodes; smooth workflow from discount to shelf-ready product
 
+### Bulk Printer Mode & Network Integration (New)
+- **Functionality**: Enterprise-grade bulk label printing system with network printer discovery, multi-product selection, batch printing, and real-time print queue management. Auto-discovers network printers (Zebra, Brother, Dymo, HP), shows printer status (online/offline/paper-low), allows selection of multiple discounted products via checkboxes, configures copies per label (1-10), label sizes (small/medium/large), and optional barcode/QR code inclusion. Displays real-time print progress with percentage complete and handles printer errors gracefully.
+- **Purpose**: Streamline high-volume label printing for stores with many discounted products, eliminating the need to print labels one-by-one and integrating with professional store printer networks
+- **Trigger**: Click "Bulk Print Labels" button on Products tab (enabled when discounted products exist)
+- **Progression**: Click Bulk Print → Scan network for printers → Select printer from discovered list → Check products to print → Configure copies and label settings → Test printer connection (optional) → Click Print → System sends batch to printer → Real-time progress bar updates → All labels print sequentially → Products automatically marked as labeled → Confirmation toast shows total labels printed
+- **Success criteria**: Discovers and connects to 95% of common network printers; prints 50+ labels in under 2 minutes; handles printer errors with clear recovery options; reduces label printing time by 80% for stores with 20+ products; seamless integration with existing workflow
+
 ## Edge Case Handling
 
 - **Expired Products** - Separate section with remove option; contribute to "missed opportunities" metric
@@ -98,6 +105,11 @@ This is a production-ready MVP with intelligent discounting, multi-store managem
 - **OCR Scan Failure** - Option to retry or switch to manual entry; confidence scores shown
 - **Barcode Not Found** - LLM generates realistic product name based on barcode pattern
 - **Poor Lighting Conditions** - Visual feedback guides user to improve camera angle/lighting
+- **Printer Offline** - Clear error message with troubleshooting steps; option to select different printer
+- **Printer Out of Paper** - Real-time status detection with alert before starting bulk print job
+- **Network Printer Not Discovered** - Manual IP entry option; retry scan mechanism
+- **Print Job Failure Mid-Batch** - Resumes from last successful print; doesn't lose progress
+- **No Discounted Products** - Bulk print button disabled with tooltip explaining why
 - **Multiple Date Formats** - OCR intelligently parses various date formats (MM/DD/YYYY, DD-MM-YYYY, etc.)
 - **Category-Specific Logic** - Discount calculations account for all four categories (Meat, Fruit, Dairy, Dry Goods); missing category defaults to lowest modifier
 - **Zero Days Until Expiry** - Products expiring today receive maximum urgency and prominent placement in Today's Action List

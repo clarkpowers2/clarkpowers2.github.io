@@ -17,6 +17,7 @@ import { ScannerDialog } from '@/components/ScannerDialog'
 import { AIChatBot } from '@/components/AIChatBot'
 import { TodaysActionList } from '@/components/TodaysActionList'
 import { RealtimeAudit } from '@/components/RealtimeAudit'
+import { BulkPrinterMode } from '@/components/BulkPrinterMode'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -25,7 +26,7 @@ import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { 
   Plus, ChartLine, Package, ClockCountdown, Storefront,
-  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain, Scan, Receipt
+  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain, Scan, Receipt, Printer
 } from '@phosphor-icons/react'
 import { toast, Toaster } from 'sonner'
 import { calculateDiscountInfo, calculateDaysUntilExpiry } from '@/lib/productUtils'
@@ -48,6 +49,7 @@ function App() {
   const [aiDiscountDialogOpen, setAiDiscountDialogOpen] = useState(false)
   const [scannerDialogOpen, setScannerDialogOpen] = useState(false)
   const [aiChatBotOpen, setAiChatBotOpen] = useState(false)
+  const [bulkPrinterOpen, setBulkPrinterOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
 
   useEffect(() => {
@@ -709,6 +711,24 @@ function App() {
               </motion.div>
             ) : (
               <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold">Product Inventory</h2>
+                    <p className="text-muted-foreground text-sm mt-1">
+                      Manage and label discounted products
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setBulkPrinterOpen(true)}
+                    size="lg"
+                    variant="default"
+                    disabled={storeProducts.filter(p => p.status === 'discounted' || p.status === 'labeled').length === 0}
+                  >
+                    <Printer size={20} weight="bold" className="mr-2" />
+                    Bulk Print Labels
+                  </Button>
+                </div>
+
                 {groupedProducts.today.length > 0 && (
                   <div>
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
@@ -897,6 +917,15 @@ function App() {
         open={scannerDialogOpen}
         onOpenChange={setScannerDialogOpen}
         onScanComplete={handleScanComplete}
+      />
+
+      <BulkPrinterMode
+        open={bulkPrinterOpen}
+        onOpenChange={setBulkPrinterOpen}
+        products={storeProducts}
+        onPrintComplete={(productIds) => {
+          productIds.forEach(id => handlePrinted(id))
+        }}
       />
     </div>
   )
