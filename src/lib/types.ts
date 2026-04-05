@@ -1,4 +1,4 @@
-export type ProductCategory = 'produce' | 'dairy' | 'meat' | 'bakery' | 'packaged' | 'other'
+export type ProductCategory = 'fruit' | 'dairy' | 'meat' | 'dry-goods'
 
 export type ProductStatus = 'pending' | 'discounted' | 'labeled' | 'sold' | 'expired'
 

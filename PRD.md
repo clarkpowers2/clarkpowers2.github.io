@@ -27,11 +27,18 @@ This is a full-featured SaaS platform with revenue analytics, multi-store manage
 - **Success criteria**: Seamless switching between stores; clear visual indication of active store
 
 ### Smart Discount Engine (Enhanced)
-- **Functionality**: Dynamic discounts based on category urgency (meat = aggressive), time of day (evening = higher %), and days until expiry
-- **Purpose**: Maximizes recovery while matching customer shopping patterns
-- **Trigger**: Automatic calculation on product add and every hour
-- **Progression**: Product added → Category evaluated → Time-based modifier applied → Final discount calculated → Staff can override if needed
-- **Success criteria**: Discounts feel intelligent; recovery rates improve 15-30% vs. static discounts
+- **Functionality**: Structured category-based discount system with automated expiration logic. Meat gets highest urgency (20% category modifier), Fruit gets high urgency (15% modifier), Dairy gets medium urgency (10% modifier), and Dry Goods get minimal modifier (0%). Base discount automatically triggers based on days until expiry: ≤3 days (15% discount), ≤2 days (30% discount), ≤1 day (50% aggressive discount). Time-of-day modifiers add extra discounting during peak shopping hours.
+- **Purpose**: Maximizes revenue recovery through intelligent, automated category-specific discounting that reflects real spoilage risk and market dynamics
+- **Trigger**: Automatic calculation on product add and hourly recalculation for dynamic pricing
+- **Progression**: Product added → Days until expiry calculated → Category evaluated (Meat/Fruit/Dairy/Dry Goods) → Base discount determined → Category modifier applied → Time-based modifier applied → Final discount calculated → Staff can override if needed
+- **Success criteria**: Discounts feel intelligent and appropriate for category; recovery rates improve 15-30% vs. static discounts; meat products receive aggressive discounting earlier than dry goods
+
+### Today's Action List (New)
+- **Functionality**: Auto-generated daily dashboard card showing critical items (≤1 day), high priority items (2 days), and medium priority items (3 days). Displays count of items needing discount, items ready for labeling, and total potential revenue at risk.
+- **Purpose**: Provides staff with immediate visibility into urgent actions required to prevent waste and recover revenue
+- **Trigger**: Automatically generated on dashboard load; updates in real-time as product statuses change
+- **Progression**: App loads → System scans all products → Groups by urgency level → Calculates potential revenue → Displays action summary → Staff clicks "View All" → Navigates to products tab filtered by urgency
+- **Success criteria**: Staff can see what needs attention within 3 seconds of opening app; zero missed critical items; clear priority hierarchy guides workflow
 
 ### Staff Activity Tracking
 - **Functionality**: Logs all discount applications and label prints with staff member attribution and timestamps
@@ -75,7 +82,7 @@ This is a full-featured SaaS platform with revenue analytics, multi-store manage
 - **No Stores Created** - Onboarding flow to create first store
 - **Store Switching** - Clear confirmation when switching; unsaved work warnings
 - **Staff Attribution** - Falls back to "System" if user not identified
-- **Network Offline** - All data persists locally; syncs when reconnected
+- **Network Offline** - All data persists locally using useKV; syncs when reconnected
 - **Invalid Dates** - Form validation prevents past dates
 - **Report Generation Failure** - Retry mechanism; shows last successful report
 - **Multi-Store Data Conflicts** - Each store has independent data namespace
@@ -85,6 +92,9 @@ This is a full-featured SaaS platform with revenue analytics, multi-store manage
 - **Barcode Not Found** - LLM generates realistic product name based on barcode pattern
 - **Poor Lighting Conditions** - Visual feedback guides user to improve camera angle/lighting
 - **Multiple Date Formats** - OCR intelligently parses various date formats (MM/DD/YYYY, DD-MM-YYYY, etc.)
+- **Category-Specific Logic** - Discount calculations account for all four categories (Meat, Fruit, Dairy, Dry Goods); missing category defaults to lowest modifier
+- **Zero Days Until Expiry** - Products expiring today receive maximum urgency and prominent placement in Today's Action List
+- **Manual Discount Overrides** - Custom percentages bypass automatic calculations while maintaining category display
 
 ## Design Direction
 

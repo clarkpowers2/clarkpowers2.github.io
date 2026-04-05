@@ -15,12 +15,10 @@ export function calculateDaysUntilExpiry(expiryDate: string): number {
 
 export function getCategoryModifier(category: Product['category']): number {
   const modifiers: Record<Product['category'], number> = {
-    meat: 15,
+    meat: 20,
+    fruit: 15,
     dairy: 10,
-    produce: 10,
-    bakery: 5,
-    packaged: 0,
-    other: 0
+    'dry-goods': 0
   }
   return modifiers[category]
 }
@@ -42,9 +40,9 @@ export function getTimeModifier(): number {
 export function getBaseDiscountPercentage(daysUntilExpiry: number): number {
   if (daysUntilExpiry <= 0) return 0
   if (daysUntilExpiry === 1) return 50
-  if (daysUntilExpiry === 2) return 25
-  if (daysUntilExpiry >= 3) return 10
-  return 0
+  if (daysUntilExpiry === 2) return 30
+  if (daysUntilExpiry === 3) return 15
+  return 5
 }
 
 export function calculateDiscountInfo(product: Product): DiscountInfo {
@@ -87,12 +85,10 @@ export function formatCurrency(amount: number): string {
 
 export function getCategoryIcon(category: Product['category']): string {
   const icons: Record<Product['category'], string> = {
-    produce: 'Apple',
+    fruit: 'Apple',
     dairy: 'Drop',
     meat: 'Fish',
-    bakery: 'Bread',
-    packaged: 'Package',
-    other: 'ShoppingCart'
+    'dry-goods': 'Package'
   }
   return icons[category]
 }

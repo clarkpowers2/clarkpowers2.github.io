@@ -17,12 +17,10 @@ export function calculateRevenueMetrics(products: Product[]): RevenueMetrics {
   let missedOpportunities = 0
 
   const categoryRevenue: Record<ProductCategory, { revenue: number; count: number }> = {
-    produce: { revenue: 0, count: 0 },
+    fruit: { revenue: 0, count: 0 },
     dairy: { revenue: 0, count: 0 },
     meat: { revenue: 0, count: 0 },
-    bakery: { revenue: 0, count: 0 },
-    packaged: { revenue: 0, count: 0 },
-    other: { revenue: 0, count: 0 }
+    'dry-goods': { revenue: 0, count: 0 }
   }
 
   products.forEach(product => {

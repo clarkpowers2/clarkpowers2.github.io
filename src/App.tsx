@@ -15,6 +15,7 @@ import { StaffAlertsPanel } from '@/components/StaffAlertsPanel'
 import { PriceCalculator } from '@/components/PriceCalculator'
 import { ScannerDialog } from '@/components/ScannerDialog'
 import { AIChatBot } from '@/components/AIChatBot'
+import { TodaysActionList } from '@/components/TodaysActionList'
 import { RealtimeAudit } from '@/components/RealtimeAudit'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -95,8 +96,8 @@ function App() {
         },
         {
           id: 'product-demo-3',
-          name: 'Caesar Salad Mix',
-          category: 'produce',
+          name: 'Mixed Berry Pack',
+          category: 'fruit',
           originalPrice: 3.49,
           expiryDate: formatDate(tomorrow),
           status: 'pending',
@@ -528,6 +529,11 @@ function App() {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
+            <TodaysActionList 
+              products={storeProducts}
+              onViewProducts={() => setActiveTab('products')}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <RevenueCard
                 title="Revenue Today"

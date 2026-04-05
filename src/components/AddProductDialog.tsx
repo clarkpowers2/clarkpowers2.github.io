@@ -25,7 +25,7 @@ interface AddProductDialogProps {
 
 export function AddProductDialog({ open, onOpenChange, onAdd }: AddProductDialogProps) {
   const [name, setName] = useState('')
-  const [category, setCategory] = useState<ProductCategory>('other')
+  const [category, setCategory] = useState<ProductCategory>('fruit')
   const [price, setPrice] = useState('')
   const [expiryDate, setExpiryDate] = useState<Date>()
   const [scannerOpen, setScannerOpen] = useState(false)
@@ -45,7 +45,7 @@ export function AddProductDialog({ open, onOpenChange, onAdd }: AddProductDialog
     })
     
     setName('')
-    setCategory('other')
+    setCategory('fruit')
     setPrice('')
     setExpiryDate(undefined)
     onOpenChange(false)
@@ -95,12 +95,10 @@ export function AddProductDialog({ open, onOpenChange, onAdd }: AddProductDialog
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="produce">Produce</SelectItem>
+                <SelectItem value="fruit">Fruit</SelectItem>
                 <SelectItem value="dairy">Dairy</SelectItem>
                 <SelectItem value="meat">Meat & Seafood</SelectItem>
-                <SelectItem value="bakery">Bakery</SelectItem>
-                <SelectItem value="packaged">Packaged Goods</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="dry-goods">Dry Goods</SelectItem>
               </SelectContent>
             </Select>
           </div>
