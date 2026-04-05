@@ -11,6 +11,7 @@ export interface Product {
   status: ProductStatus
   dateAdded: string
   storeId: string
+  customDiscountPercentage?: number
   discountedBy?: string
   discountedAt?: string
   labeledBy?: string

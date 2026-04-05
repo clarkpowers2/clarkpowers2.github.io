@@ -9,6 +9,7 @@ import { ProductCard } from '@/components/ProductCard'
 import { AddProductDialog } from '@/components/AddProductDialog'
 import { CreateStoreDialog } from '@/components/CreateStoreDialog'
 import { PrintLabel } from '@/components/PrintLabel'
+import { CustomDiscountDialog } from '@/components/CustomDiscountDialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -34,6 +35,8 @@ function App() {
   const [createStoreDialogOpen, setCreateStoreDialogOpen] = useState(false)
   const [printProduct, setPrintProduct] = useState<Product | null>(null)
   const [printDialogOpen, setPrintDialogOpen] = useState(false)
+  const [customDiscountProduct, setCustomDiscountProduct] = useState<Product | null>(null)
+  const [customDiscountDialogOpen, setCustomDiscountDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
 
   useEffect(() => {
@@ -275,6 +278,47 @@ function App() {
 
     toast.success('Discount applied!', {
       description: `${discountInfo.discountPercentage}% off - Ready to print label`
+    })
+  }
+
+  const handleCustomDiscount = (product: Product) => {
+    setCustomDiscountProduct(product)
+    setCustomDiscountDialogOpen(true)
+  }
+
+  const handleApplyCustomDiscount = (product: Product, customDiscount: number) => {
+    const customDiscountedPrice = product.originalPrice * (1 - customDiscount / 100)
+    
+    setProducts(current =>
+      (current || []).map(p =>
+        p.id === product.id ? { 
+          ...p,
+          customDiscountPercentage: customDiscount,
+          status: 'discounted' as const,
+          discountedBy: 'Current User',
+          discountedAt: new Date().toISOString()
+        } : p
+      )
+    )
+
+    const activity: Activity = {
+      id: `activity-${Date.now()}`,
+      storeId: currentStoreId,
+      productId: product.id,
+      productName: product.name,
+      action: 'discount_applied',
+      staffMember: 'Current User',
+      timestamp: new Date().toISOString(),
+      metadata: {
+        originalPrice: product.originalPrice,
+        discountedPrice: customDiscountedPrice,
+        discountPercentage: customDiscount
+      }
+    }
+    setActivities(current => [...(current || []), activity])
+
+    toast.success('Custom discount applied!', {
+      description: `${customDiscount}% off (Manual Override) - Ready to print label`
     })
   }
 
@@ -545,6 +589,7 @@ function App() {
                           key={product.id}
                           product={product}
                           onApplyDiscount={handleApplyDiscount}
+                          onCustomDiscount={handleCustomDiscount}
                           onPrintLabel={handlePrintLabel}
                           onRemove={handleRemove}
                         />
@@ -565,6 +610,7 @@ function App() {
                           key={product.id}
                           product={product}
                           onApplyDiscount={handleApplyDiscount}
+                          onCustomDiscount={handleCustomDiscount}
                           onPrintLabel={handlePrintLabel}
                           onRemove={handleRemove}
                         />
@@ -585,6 +631,7 @@ function App() {
                           key={product.id}
                           product={product}
                           onApplyDiscount={handleApplyDiscount}
+                          onCustomDiscount={handleCustomDiscount}
                           onPrintLabel={handlePrintLabel}
                           onRemove={handleRemove}
                         />
@@ -607,6 +654,7 @@ function App() {
                             key={product.id}
                             product={product}
                             onApplyDiscount={handleApplyDiscount}
+                            onCustomDiscount={handleCustomDiscount}
                             onPrintLabel={handlePrintLabel}
                             onRemove={handleRemove}
                           />
@@ -653,6 +701,13 @@ function App() {
         open={printDialogOpen}
         onOpenChange={setPrintDialogOpen}
         onPrinted={handlePrinted}
+      />
+
+      <CustomDiscountDialog
+        product={customDiscountProduct}
+        open={customDiscountDialogOpen}
+        onOpenChange={setCustomDiscountDialogOpen}
+        onApply={handleApplyCustomDiscount}
       />
     </div>
   )

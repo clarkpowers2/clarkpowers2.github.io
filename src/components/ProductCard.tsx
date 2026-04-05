@@ -3,18 +3,19 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { calculateDiscountInfo, formatCurrency, getUrgencyColor, getUrgencyBadgeColor, getCategoryIcon } from '@/lib/productUtils'
-import { Tag, Printer, CheckCircle, Trash } from '@phosphor-icons/react'
+import { Tag, Printer, CheckCircle, Trash, Sparkle } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import * as PhosphorIcons from '@phosphor-icons/react'
 
 interface ProductCardProps {
   product: Product
   onApplyDiscount: (product: Product) => void
+  onCustomDiscount: (product: Product) => void
   onPrintLabel: (product: Product) => void
   onRemove: (productId: string) => void
 }
 
-export function ProductCard({ product, onApplyDiscount, onPrintLabel, onRemove }: ProductCardProps) {
+export function ProductCard({ product, onApplyDiscount, onCustomDiscount, onPrintLabel, onRemove }: ProductCardProps) {
   const discountInfo = calculateDiscountInfo(product)
   const urgencyColorClass = getUrgencyColor(discountInfo.urgencyLevel)
   const badgeColorClass = getUrgencyBadgeColor(discountInfo.urgencyLevel)
@@ -75,6 +76,9 @@ export function ProductCard({ product, onApplyDiscount, onPrintLabel, onRemove }
               <div className="ml-auto">
                 <Badge variant="outline" className="text-accent border-accent">
                   {discountInfo.discountPercentage}% OFF
+                  {product.customDiscountPercentage !== undefined && (
+                    <Sparkle size={14} weight="fill" className="ml-1 inline" />
+                  )}
                 </Badge>
               </div>
             )}
@@ -92,14 +96,24 @@ export function ProductCard({ product, onApplyDiscount, onPrintLabel, onRemove }
                 Remove
               </Button>
             ) : product.status === 'pending' ? (
-              <Button
-                onClick={() => onApplyDiscount(product)}
-                size="lg"
-                className="flex-1 bg-primary hover:bg-primary/90"
-              >
-                <Tag size={20} weight="bold" className="mr-2" />
-                Apply Discount
-              </Button>
+              <>
+                <Button
+                  onClick={() => onApplyDiscount(product)}
+                  size="lg"
+                  className="flex-1 bg-primary hover:bg-primary/90"
+                >
+                  <Tag size={20} weight="bold" className="mr-2" />
+                  Apply Discount
+                </Button>
+                <Button
+                  onClick={() => onCustomDiscount(product)}
+                  size="lg"
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  <Sparkle size={20} weight="bold" />
+                </Button>
+              </>
             ) : product.status === 'discounted' ? (
               <Button
                 onClick={() => onPrintLabel(product)}

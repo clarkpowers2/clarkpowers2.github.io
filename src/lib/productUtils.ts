@@ -53,7 +53,10 @@ export function calculateDiscountInfo(product: Product): DiscountInfo {
   const categoryModifier = getCategoryModifier(product.category)
   const timeModifier = getTimeModifier()
   
-  const totalDiscount = Math.min(baseDiscount + categoryModifier + timeModifier, 75)
+  const totalDiscount = product.customDiscountPercentage !== undefined 
+    ? product.customDiscountPercentage 
+    : Math.min(baseDiscount + categoryModifier + timeModifier, 75)
+  
   const discountedPrice = product.originalPrice * (1 - totalDiscount / 100)
   
   let urgencyLevel: DiscountInfo['urgencyLevel'] = 'low'
