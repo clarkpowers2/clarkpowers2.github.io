@@ -20,6 +20,7 @@ import { TodaysActionList } from '@/components/TodaysActionList'
 import { RealtimeAudit } from '@/components/RealtimeAudit'
 import { BulkPrinterMode } from '@/components/BulkPrinterMode'
 import { WeeklyReportGenerator } from '@/components/WeeklyReportGenerator'
+import { EmailAnalytics } from '@/components/EmailAnalytics'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -28,7 +29,7 @@ import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { 
   Plus, ChartLine, Package, ClockCountdown, Storefront,
-  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain, Scan, Receipt, Printer, FileText
+  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain, Scan, Receipt, Printer, FileText, EnvelopeSimple
 } from '@phosphor-icons/react'
 import { toast, Toaster } from 'sonner'
 import { calculateDiscountInfo, calculateDaysUntilExpiry } from '@/lib/productUtils'
@@ -595,7 +596,7 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 pb-24">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-6xl grid-cols-4 sm:grid-cols-7 gap-1">
+          <TabsList className="grid w-full max-w-6xl grid-cols-4 sm:grid-cols-8 gap-1">
             <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <ChartLine size={16} weight="bold" className="shrink-0" />
               <span className="hidden sm:inline">Dashboard</span>
@@ -624,6 +625,10 @@ function App() {
             <TabsTrigger value="report" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <FileText size={16} weight="bold" className="shrink-0" />
               <span className="hidden sm:inline">Report</span>
+            </TabsTrigger>
+            <TabsTrigger value="emails" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <EnvelopeSimple size={16} weight="bold" className="shrink-0" />
+              <span className="hidden sm:inline">Emails</span>
             </TabsTrigger>
             <TabsTrigger value="activity" className="gap-1 sm:gap-2 text-xs sm:text-sm">
               <ClockCountdown size={16} weight="bold" className="shrink-0" />
@@ -873,6 +878,16 @@ function App() {
               printerUsageStats={(printerUsageStats || []).filter(s => s.storeId === currentStoreId)}
               storeId={currentStoreId}
               storeName={currentStore?.name || 'Store'}
+            />
+          </TabsContent>
+
+          <TabsContent value="emails">
+            <EmailAnalytics
+              stores={stores || []}
+              currentStoreId={currentStoreId}
+              products={products || []}
+              activities={activities || []}
+              printerUsageStats={printerUsageStats || []}
             />
           </TabsContent>
 

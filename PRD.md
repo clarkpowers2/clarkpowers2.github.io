@@ -61,6 +61,13 @@ This is a production-ready MVP with intelligent discounting, multi-store managem
 - **Progression**: Week ends → Report compiled → Summary statistics calculated → Charts generated → View in dashboard or export
 - **Success criteria**: Managers use report to make strategic decisions; clear actionable insights
 
+### Automated Email Analytics Dashboard (New)
+- **Functionality**: Comprehensive email automation system for weekly analytics reports and daily summaries. Manage email recipients (owners, managers, staff), create custom schedules (daily/weekly/monthly), configure delivery times and days, preview reports before sending, view email history, and test email generation. Supports multiple recipients per schedule with role-based access.
+- **Purpose**: Automate delivery of analytics insights to stakeholders, ensuring managers and owners stay informed of performance without needing to log in
+- **Trigger**: Accessed via Emails tab; schedules execute automatically based on configuration
+- **Progression**: Navigate to Emails tab → Add recipients with roles → Create email schedule (select type, day, time, recipients) → Preview report HTML → Test send → Enable schedule → System auto-generates and logs reports → View history of sent emails
+- **Success criteria**: Email schedules execute reliably; recipients receive professional HTML reports with accurate metrics; managers can configure schedules without technical knowledge; report previews match final emails; history provides audit trail
+
 ### Auto-Expiry Date Scanning
 - **Functionality**: Camera-based barcode and OCR scanning to automatically capture expiry dates and product information from packaging
 - **Purpose**: Eliminates manual data entry errors and speeds up product registration
@@ -119,6 +126,13 @@ This is a production-ready MVP with intelligent discounting, multi-store managem
 - **USB Printer Not Detected** - Graceful fallback to browser print with instruction message
 - **Print Job Incomplete** - On-screen confirmation button allows staff to verify before marking as printed
 - **Multiple Label Prints** - Can reprint labels if needed; doesn't duplicate product status
+- **No Email Recipients** - Schedule creation disabled with clear message; prompts to add recipients first
+- **Invalid Email Format** - Form validation prevents malformed email addresses
+- **Schedule Conflicts** - Multiple schedules can exist; each executes independently
+- **Email Generation Failure** - Graceful error handling with retry option; falls back to manual report generation
+- **Empty Data Sets** - Reports include helpful messaging when no data is available for the period
+- **Time Zone Differences** - Schedules execute based on browser/system time; considers store time zone for data calculations
+- **Recipient Removed Mid-Schedule** - Schedule automatically filters out deleted recipients; warns if no recipients remain
 
 ## Design Direction
 
@@ -218,6 +232,7 @@ Animations should feel sophisticated and purposeful - reinforcing the premium Sa
 - UserCircle (staff tracking)
 - Bell (notifications)
 - FileText (reports)
+- EnvelopeSimple (email analytics)
 - TrendUp (positive metrics)
 - TrendDown (missed opportunities)
 - Calendar (date ranges)
