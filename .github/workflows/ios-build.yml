@@ -1,0 +1,55 @@
+name: iOS Build & Submit
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Build profile to use'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+          - development
+      submit:
+        description: 'Submit to TestFlight after build?'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  build-ios:
+    name: Build iOS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build iOS app
+        run: |
+          eas build --platform ios --profile ${{ github.event.inputs.profile || 'production' }} --non-interactive
+
+      - name: Submit to TestFlight (if requested)
+        if: github.event.inputs.submit == 'true'
+        run: |
+          eas submit --platform ios --profile ${{ github.event.inputs.profile || 'production' }} --non-interactive
+        env:
+          EXPO_APPLE_ID: ${{ secrets.EXPO_APPLE_ID }}
+          EXPO_APPLE_PASSWORD: ${{ secrets.EXPO_APPLE_PASSWORD }}
+          EXPO_APPLE_TEAM_ID: ${{ secrets.EXPO_APPLE_TEAM_ID }}
