@@ -1,0 +1,13 @@
+# Alternative submodule configuration for freshsave-mobile
+#
+# This file is prepared as an alternative to the current git subtree setup.
+# 
+# To switch from subtree to submodule:
+# 1. Remove the subtree: git rm -r mobile
+# 2. Add as submodule: git submodule add https://github.com/clarkpowers2/freshsave-mobile.git mobile
+# 3. Commit the .gitmodules file
+
+[submodule "mobile"]
+	path = mobile
+	url = https://github.com/clarkpowers2/freshsave-mobile.git
+	branch = master
