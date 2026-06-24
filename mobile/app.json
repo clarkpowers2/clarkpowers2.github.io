@@ -7,7 +7,9 @@
     "icon": "./assets/images/icon.png",
     "scheme": "freshsavemobile",
     "userInterfaceStyle": "automatic",
-    "platforms": ["ios"],
+    "platforms": [
+      "ios"
+    ],
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.freshsave.staff",
@@ -17,7 +19,9 @@
       "infoPlist": {
         "NSCameraUsageDescription": "FreshSave Staff needs camera access to scan product barcodes and expiry dates.",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["fetch"]
+        "UIBackgroundModes": [
+          "fetch"
+        ]
       }
     },
     "plugins": [
@@ -34,7 +38,8 @@
         {
           "cameraPermission": "Allow FreshSave Staff to access your camera to scan barcodes and expiry dates on products."
         }
-      ]
+      ],
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,
