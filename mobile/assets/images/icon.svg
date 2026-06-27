@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1B4D2E"/>
+      <stop offset="100%" style="stop-color:#0D2E1A"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3DB85C"/>
+      <stop offset="100%" style="stop-color:#27863F"/>
+    </linearGradient>
+    <linearGradient id="shieldInner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4DCB6A"/>
+      <stop offset="100%" style="stop-color:#2E9E4A"/>
+    </linearGradient>
+    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FDDBB4"/>
+      <stop offset="100%" style="stop-color:#F5C48A"/>
+    </linearGradient>
+    <linearGradient id="apronGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#E8EEE9"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="rgba(0,0,0,0.4)"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="220" ry="220" fill="url(#bg)"/>
+  <path d="M512,95 L800,220 L800,525 C800,695 665,808 512,878 C359,808 224,695 224,525 L224,220 Z" fill="url(#shieldGrad)" filter="url(#shadow)"/>
+  <path d="M512,145 L758,252 L758,520 C758,665 638,765 512,828 C386,765 266,665 266,520 L266,252 Z" fill="url(#shieldInner)"/>
+  <path d="M512,188 L722,282 L722,515 C722,638 620,728 512,782 C404,728 302,638 302,515 L302,282 Z" fill="rgba(0,0,0,0.15)"/>
+  <rect x="448" y="215" width="128" height="28" rx="14" fill="#1B5E35"/>
+  <rect x="432" y="235" width="160" height="14" rx="7" fill="#145229"/>
+  <rect x="420" y="242" width="184" height="10" rx="5" fill="#0F3D1F"/>
+  <ellipse cx="512" cy="300" rx="62" ry="68" fill="url(#skinGrad)"/>
+  <rect x="452" y="215" width="120" height="20" rx="10" fill="#4A2C0A"/>
+  <ellipse cx="490" cy="288" rx="8" ry="9" fill="white"/>
+  <ellipse cx="534" cy="288" rx="8" ry="9" fill="white"/>
+  <circle cx="492" cy="290" r="5" fill="#2C1A0E"/>
+  <circle cx="536" cy="290" r="5" fill="#2C1A0E"/>
+  <circle cx="494" cy="288" r="2" fill="white"/>
+  <circle cx="538" cy="288" r="2" fill="white"/>
+  <path d="M480,276 Q490,270 502,275" fill="none" stroke="#4A2C0A" stroke-width="4" stroke-linecap="round"/>
+  <path d="M522,275 Q534,270 546,276" fill="none" stroke="#4A2C0A" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="512" cy="308" rx="6" ry="4" fill="#E8A870"/>
+  <path d="M492,326 Q512,344 532,326" fill="none" stroke="#C8845A" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="450" cy="300" rx="12" ry="16" fill="#FDDBB4"/>
+  <ellipse cx="574" cy="300" rx="12" ry="16" fill="#FDDBB4"/>
+  <rect x="494" y="360" width="36" height="40" rx="10" fill="#FDDBB4"/>
+  <path d="M390,400 C390,400 430,370 512,370 C594,370 634,400 634,400 L650,640 L374,640 Z" fill="#1B6B38"/>
+  <path d="M494,370 L480,410 L512,395 L544,410 L530,370 Z" fill="#145229"/>
+  <path d="M456,405 L440,630 L584,630 L568,405 Q512,395 456,405 Z" fill="url(#apronGrad)" opacity="0.95"/>
+  <path d="M456,405 C440,408 430,415 420,430" fill="none" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <path d="M568,405 C584,408 594,415 604,430" fill="none" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <rect x="476" y="490" width="72" height="55" rx="8" fill="rgba(0,0,0,0.08)" stroke="rgba(0,0,0,0.12)" stroke-width="2"/>
+  <rect x="496" y="488" width="8" height="30" rx="3" fill="#208AEF"/>
+  <rect x="510" y="488" width="6" height="25" rx="3" fill="#E83B2A"/>
+  <rect x="430" y="430" width="80" height="44" rx="8" fill="white" opacity="0.9"/>
+  <text x="470" y="447" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="13" fill="#1B4D2E">STAFF</text>
+  <text x="470" y="466" text-anchor="middle" font-family="Arial, sans-serif" font-weight="400" font-size="11" fill="#444">FreshSave</text>
+  <path d="M390,400 L340,520 Q330,545 350,555 L380,565 L420,450 Z" fill="#1B6B38"/>
+  <ellipse cx="348" cy="560" rx="28" ry="22" fill="#FDDBB4"/>
+  <rect x="290" y="530" width="95" height="118" rx="8" fill="#D4A843"/>
+  <rect x="326" y="520" width="22" height="20" rx="6" fill="#B8922E"/>
+  <rect x="298" y="542" width="79" height="98" rx="4" fill="white"/>
+  <rect x="308" y="556" width="48" height="5" rx="2" fill="#CCC"/>
+  <rect x="308" y="570" width="55" height="5" rx="2" fill="#CCC"/>
+  <rect x="308" y="584" width="42" height="5" rx="2" fill="#CCC"/>
+  <rect x="308" y="598" width="50" height="5" rx="2" fill="#CCC"/>
+  <polyline points="304,558 308,563 316,554" fill="none" stroke="#34C759" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="304,572 308,577 316,568" fill="none" stroke="#34C759" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="304,586 308,591 316,582" fill="none" stroke="#34C759" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M634,400 L684,520 Q694,545 674,555 L644,565 L604,450 Z" fill="#1B6B38"/>
+  <ellipse cx="676" cy="560" rx="28" ry="22" fill="#FDDBB4"/>
+  <rect x="650" y="520" width="85" height="70" rx="10" fill="white" opacity="0.95"/>
+  <circle cx="662" cy="532" r="7" fill="#1B6B38"/>
+  <text x="692" y="552" text-anchor="middle" font-family="Arial, sans-serif" font-weight="800" font-size="22" fill="#E83B2A">30%</text>
+  <text x="692" y="572" text-anchor="middle" font-family="Arial, sans-serif" font-weight="600" font-size="14" fill="#1B4D2E">OFF</text>
+  <rect x="440" y="630" width="60" height="90" rx="12" fill="#145229"/>
+  <rect x="524" y="630" width="60" height="90" rx="12" fill="#145229"/>
+  <ellipse cx="470" cy="718" rx="40" ry="18" fill="#1A1A1A"/>
+  <ellipse cx="554" cy="718" rx="40" ry="18" fill="#1A1A1A"/>
+  <text x="512" y="938" text-anchor="middle" font-family="'SF Pro Display', -apple-system, Arial, sans-serif" font-weight="800" font-size="60" fill="white" letter-spacing="-1">FreshSave</text>
+  <text x="512" y="982" text-anchor="middle" font-family="'SF Pro Display', -apple-system, Arial, sans-serif" font-weight="400" font-size="28" fill="rgba(255,255,255,0.55)" letter-spacing="4">STAFF APP</text>
+</svg>

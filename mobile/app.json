@@ -11,7 +11,7 @@
       "ios"
     ],
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.freshsave.staff",
       "buildNumber": "1.0.4",
       "supportsTablet": false,
@@ -55,7 +55,7 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
+    "ups": {
       "url": "https://u.expo.dev/827d3726-88fa-4ae2-b75d-297498132307"
     }
   }
