@@ -2,39 +2,37 @@ import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product } from './types';
 
-const STORAGE_KEY = 'freshesave-mobile-products';
+const STORAGE_KEY = 'freshsave-mobile-products-v2';
+
+const today = (offsetDays: number) =>
+  new Date(Date.now() + offsetDays * 86400000).toISOString().split('T')[0];
 
 const DEFAULT_PRODUCTS: Product[] = [
-  {
-    id: 'p1',
-    name: 'Organic Chicken Breast',
-    category: 'meat',
-    originalPrice: 12.99,
-    expiryDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    status: 'pending',
-    dateAdded: new Date().toISOString(),
-    storeId: 'store-downtown',
-  },
-  {
-    id: 'p2',
-    name: 'Fresh Strawberries 1lb',
-    category: 'fruit',
-    originalPrice: 4.99,
-    expiryDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],
-    status: 'pending',
-    dateAdded: new Date().toISOString(),
-    storeId: 'store-downtown',
-  },
-  {
-    id: 'p3',
-    name: 'Whole Milk 1gal',
-    category: 'dairy',
-    originalPrice: 3.49,
-    expiryDate: new Date(Date.now() + 259200000).toISOString().split('T')[0],
-    status: 'pending',
-    dateAdded: new Date().toISOString(),
-    storeId: 'store-downtown',
-  },
+  // Critical - expires today
+  { id: 'p1', name: 'Organic Chicken Breast', category: 'meat', originalPrice: 12.99, expiryDate: today(0), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+  { id: 'p2', name: 'Ground Beef 1lb', category: 'meat', originalPrice: 8.49, expiryDate: today(0), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+  { id: 'p3', name: 'Greek Yogurt 32oz', category: 'dairy', originalPrice: 5.99, expiryDate: today(0), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+
+  // High - expires tomorrow
+  { id: 'p4', name: 'Fresh Strawberries 1lb', category: 'fruit', originalPrice: 4.99, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+  { id: 'p5', name: 'Salmon Fillet 12oz', category: 'meat', originalPrice: 14.99, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+  { id: 'p6', name: 'Fresh Blueberries 6oz', category: 'fruit', originalPrice: 3.99, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+
+  // Medium - expires in 3 days
+  { id: 'p7', name: 'Whole Milk 1gal', category: 'dairy', originalPrice: 3.49, expiryDate: today(3), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+  { id: 'p8', name: 'Cheddar Cheese 8oz', category: 'dairy', originalPrice: 4.29, expiryDate: today(3), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+  { id: 'p9', name: 'Organic Baby Spinach', category: 'fruit', originalPrice: 3.99, expiryDate: today(2), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+
+  // Already discounted
+  { id: 'p10', name: 'Pork Chops 2lb', category: 'meat', originalPrice: 9.99, expiryDate: today(0), status: 'discounted', discountedPrice: 4.99, discountPercentage: 50, dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
+
+  // Westside store
+  { id: 'p11', name: 'Turkey Breast Sliced', category: 'meat', originalPrice: 7.99, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-westside' },
+  { id: 'p12', name: 'Orange Juice 52oz', category: 'dairy', originalPrice: 4.49, expiryDate: today(2), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-westside' },
+
+  // Eastgate store
+  { id: 'p13', name: 'Rotisserie Chicken', category: 'meat', originalPrice: 8.99, expiryDate: today(0), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-eastgate' },
+  { id: 'p14', name: 'Raspberries 6oz', category: 'fruit', originalPrice: 3.49, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-eastgate' },
 ];
 
 export const STORES = [
@@ -48,7 +46,6 @@ export function useProducts() {
   const [currentStoreId, setCurrentStoreId] = useState('store-downtown');
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from storage
   useEffect(() => {
     async function load() {
       try {
@@ -67,7 +64,6 @@ export function useProducts() {
     load();
   }, []);
 
-  // Save whenever products change
   useEffect(() => {
     if (isLoaded) {
       AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(products)).catch(() => {});
@@ -80,15 +76,9 @@ export function useProducts() {
     setProducts(current =>
       current.map(p => {
         if (p.id === productId) {
-          // Simple simulation of discount (in real would use calculateDiscountInfo)
-          const discount = p.category === 'meat' ? 45 : p.category === 'fruit' ? 35 : 25;
+          const discount = p.category === 'meat' ? 50 : p.category === 'fruit' ? 35 : 25;
           const discountedPrice = Math.round(p.originalPrice * (1 - discount / 100) * 100) / 100;
-          return {
-            ...p,
-            status: 'discounted' as const,
-            discountedPrice,
-            discountPercentage: discount,
-          };
+          return { ...p, status: 'discounted' as const, discountedPrice, discountPercentage: discount };
         }
         return p;
       })
@@ -106,9 +96,7 @@ export function useProducts() {
     setProducts(current => [...current, product]);
   };
 
-  const switchStore = (storeId: string) => {
-    setCurrentStoreId(storeId);
-  };
+  const switchStore = (storeId: string) => setCurrentStoreId(storeId);
 
   return {
     products: storeProducts,
