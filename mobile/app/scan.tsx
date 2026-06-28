@@ -1,88 +1,63 @@
-import { View, Text, StyleSheet, Alert, Pressable } from 'react-native';
-import { useState, useCallback } from 'react';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { View, Text, StyleSheet, Alert, Pressable, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 
 export default function ScanScreen() {
-  const [permission, requestPermission] = useCameraPermissions();
-  const [scanned, setScanned] = useState(false);
   const [mode, setMode] = useState<'barcode' | 'ocr'>('barcode');
-  const [cameraKey, setCameraKey] = useState(0);
-  const [cameraVisible, setCameraVisible] = useState(false);
+  const [barcodeInput, setBarcodeInput] = useState('');
   const router = useRouter();
 
-  useFocusEffect(
-    useCallback(() => {
-      setScanned(false);
-      setCameraVisible(false);
-      const timer = setTimeout(() => setCameraVisible(true), 1000);
-      return () => {
-        clearTimeout(timer);
-        setCameraVisible(false);
-      };
-    }, [])
-  );
-
-  const handleBarcodeScanned = ({ data }: { type: string; data: string }) => {
-    if (scanned) return;
-    setScanned(true);
-    setCameraVisible(false);
+  const handleManualBarcode = () => {
+    if (!barcodeInput.trim()) {
+      Alert.alert('Enter a barcode', 'Please type or scan a barcode number.');
+      return;
+    }
     Alert.alert(
       'Barcode Detected',
-      `Code: ${data}\n\nSmart discount will be applied automatically.`,
+      `Code: ${barcodeInput}\n\nSmart discount will be applied automatically.`,
       [
         { text: 'Use & Apply Discount', onPress: () => router.back() },
-        { text: 'Scan Again', onPress: () => { setScanned(false); setCameraKey(k => k + 1); setCameraVisible(true); } },
+        { text: 'Scan Again', onPress: () => setBarcodeInput('') },
       ]
     );
   };
 
-  const simulateOCR = () => {
-    const mockResults = [
-      { expiry: new Date(Date.now() + 86400000).toISOString().split('T')[0], product: 'Organic Ground Beef' },
-      { expiry: new Date(Date.now() + 172800000).toISOString().split('T')[0], product: 'Fresh Blueberries' },
-      { expiry: new Date(Date.now() + 259200000).toISOString().split('T')[0], product: 'Greek Yogurt 32oz' },
-    ];
-    const result = mockResults[Math.floor(Math.random() * mockResults.length)];
-    Alert.alert(
-      'OCR Result',
-      `Product: ${result.product}\nExpiry: ${result.expiry}\nConfidence: 94%`,
-      [
-        { text: 'Use This Date', onPress: () => router.back() },
-        { text: 'Retake Photo', onPress: () => {} },
-      ]
-    );
+  const handleOCRCapture = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Camera needed', 'Please allow camera access in Settings to capture expiry dates.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: false,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      // Simulate OCR processing
+      const mockResults = [
+        { expiry: new Date(Date.now() + 86400000).toISOString().split('T')[0], product: 'Organic Ground Beef' },
+        { expiry: new Date(Date.now() + 172800000).toISOString().split('T')[0], product: 'Fresh Blueberries' },
+        { expiry: new Date(Date.now() + 259200000).toISOString().split('T')[0], product: 'Greek Yogurt 32oz' },
+      ];
+      const ocr = mockResults[Math.floor(Math.random() * mockResults.length)];
+      Alert.alert(
+        'OCR Result',
+        `Product: ${ocr.product}\nExpiry: ${ocr.expiry}\nConfidence: 94%`,
+        [
+          { text: 'Use This Date', onPress: () => router.back() },
+          { text: 'Retake Photo', onPress: () => {} },
+        ]
+      );
+    }
   };
-
-  if (!permission) {
-    return <View style={styles.center}><Text style={styles.centerText}>Loading...</Text></View>;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.centerText}>Camera access is needed to scan products.</Text>
-        <Pressable style={styles.permButton} onPress={requestPermission}>
-          <Text style={styles.permButtonText}>Grant Camera Access</Text>
-        </Pressable>
-      </View>
-    );
-  }
 
   return (
-    <View style={styles.container}>
-      {cameraVisible && (
-        <CameraView
-          key={cameraKey}
-          style={StyleSheet.absoluteFillObject}
-          facing="back"
-          barcodeScannerSettings={{ barcodeTypes: ['ean13','ean8','upc_a','upc_e','code128','code39','qr'] }}
-          onBarcodeScanned={mode === 'barcode' && !scanned ? handleBarcodeScanned : undefined}
-        />
-      )}
-
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.tabs}>
-        <Pressable style={[styles.tab, mode === 'barcode' && styles.tabActive]} onPress={() => { setMode('barcode'); setScanned(false); setCameraKey(k => k + 1); }}>
+        <Pressable style={[styles.tab, mode === 'barcode' && styles.tabActive]} onPress={() => setMode('barcode')}>
           <Text style={mode === 'barcode' ? styles.tabTextActive : styles.tabText}>Barcode</Text>
         </Pressable>
         <Pressable style={[styles.tab, mode === 'ocr' && styles.tabActive]} onPress={() => setMode('ocr')}>
@@ -90,47 +65,54 @@ export default function ScanScreen() {
         </Pressable>
       </View>
 
-      <View style={styles.overlay}>
-        {!cameraVisible ? (
-          <Text style={styles.instruction}>Starting camera...</Text>
-        ) : mode === 'barcode' ? (
-          <>
-            <Text style={styles.instruction}>Align barcode in frame</Text>
-            <View style={styles.scanFrame} />
-            {scanned && (
-              <Pressable style={styles.captureButton} onPress={() => { setScanned(false); setCameraKey(k => k + 1); setCameraVisible(true); }}>
-                <Text style={styles.captureText}>Scan Again</Text>
-              </Pressable>
-            )}
-          </>
-        ) : (
-          <>
-            <Text style={styles.instruction}>Position expiry date clearly</Text>
-            <View style={[styles.scanFrame, { height: 220 }]} />
-            <Pressable style={styles.captureButton} onPress={simulateOCR}>
-              <Text style={styles.captureText}>📸 Capture & Analyze</Text>
-            </Pressable>
-          </>
-        )}
-      </View>
-    </View>
+      {mode === 'barcode' ? (
+        <View style={styles.content}>
+          <Text style={styles.icon}>📦</Text>
+          <Text style={styles.title}>Scan Barcode</Text>
+          <Text style={styles.subtitle}>Enter the barcode number from the product label</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 012345678905"
+            placeholderTextColor="#999"
+            value={barcodeInput}
+            onChangeText={setBarcodeInput}
+            keyboardType="numeric"
+            returnKeyType="done"
+            onSubmitEditing={handleManualBarcode}
+            autoFocus
+          />
+          <Pressable style={styles.primaryButton} onPress={handleManualBarcode}>
+            <Text style={styles.primaryButtonText}>Look Up Product</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View style={styles.content}>
+          <Text style={styles.icon}>📅</Text>
+          <Text style={styles.title}>Capture Expiry Date</Text>
+          <Text style={styles.subtitle}>Take a photo of the expiry date on the product packaging</Text>
+          <Pressable style={styles.primaryButton} onPress={handleOCRCapture}>
+            <Text style={styles.primaryButtonText}>📸 Open Camera</Text>
+          </Pressable>
+          <Text style={styles.hint}>Camera will open to capture the expiry date</Text>
+        </View>
+      )}
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#000' },
-  centerText: { color: 'white', fontSize: 17, textAlign: 'center', marginBottom: 20 },
-  permButton: { backgroundColor: '#007AFF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 10 },
-  permButtonText: { color: 'white', fontWeight: '700', fontSize: 16 },
-  tabs: { position: 'absolute', top: 60, left: 0, right: 0, zIndex: 10, flexDirection: 'row', justifyContent: 'center' },
-  tab: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 20, marginHorizontal: 4 },
-  tabActive: { backgroundColor: '#fff' },
-  tabText: { color: 'white', fontWeight: '600' },
-  tabTextActive: { color: '#000', fontWeight: '700' },
-  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', zIndex: 5 },
-  instruction: { color: 'white', fontSize: 15, backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, marginBottom: 30, textAlign: 'center' },
-  scanFrame: { width: 260, height: 160, borderWidth: 3, borderColor: '#fff', borderRadius: 12, backgroundColor: 'transparent' },
-  captureButton: { backgroundColor: '#fff', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 30, marginTop: 40 },
-  captureText: { fontSize: 17, fontWeight: '700', color: '#000' },
+  container: { flex: 1, backgroundColor: '#fff' },
+  tabs: { flexDirection: 'row', padding: 16, paddingTop: 20, gap: 8 },
+  tab: { flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: '#f0f0f0', alignItems: 'center' },
+  tabActive: { backgroundColor: '#007AFF' },
+  tabText: { color: '#333', fontWeight: '600', fontSize: 14 },
+  tabTextActive: { color: 'white', fontWeight: '700', fontSize: 14 },
+  content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  icon: { fontSize: 64, marginBottom: 16 },
+  title: { fontSize: 24, fontWeight: '700', color: '#111', marginBottom: 8, textAlign: 'center' },
+  subtitle: { fontSize: 15, color: '#666', textAlign: 'center', marginBottom: 32, lineHeight: 22 },
+  input: { width: '100%', borderWidth: 2, borderColor: '#007AFF', borderRadius: 12, padding: 16, fontSize: 18, color: '#111', marginBottom: 16, textAlign: 'center', letterSpacing: 2 },
+  primaryButton: { backgroundColor: '#007AFF', paddingHorizontal: 40, paddingVertical: 16, borderRadius: 14, width: '100%', alignItems: 'center', marginBottom: 12 },
+  primaryButtonText: { color: 'white', fontSize: 17, fontWeight: '700' },
+  hint: { color: '#999', fontSize: 13, textAlign: 'center' },
 });
