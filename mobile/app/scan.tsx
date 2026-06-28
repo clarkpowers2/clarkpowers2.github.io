@@ -1,44 +1,45 @@
 import { View, Text, StyleSheet, Alert, Pressable } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CameraView, Camera } from 'expo-camera';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 export default function ScanScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [mode, setMode] = useState<'barcode' | 'ocr'>('barcode');
+  const [cameraReady, setCameraReady] = useState(false);
   const [cameraKey, setCameraKey] = useState(0);
-  const [showCamera, setShowCamera] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === 'granted');
-      if (status === 'granted') setShowCamera(true);
     })();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setShowCamera(true);
       setScanned(false);
-      return () => setShowCamera(false);
+      setCameraReady(false);
+      // Small delay to ensure screen is fully mounted before camera renders
+      const timer = setTimeout(() => setCameraReady(true), 300);
+      return () => {
+        clearTimeout(timer);
+        setCameraReady(false);
+      };
     }, [])
   );
 
   const handleBarcodeScanned = ({ data }: { type: string; data: string }) => {
     if (scanned) return;
     setScanned(true);
-    setShowCamera(false);
     Alert.alert(
       'Barcode Detected',
       `Code: ${data}\n\nSmart discount will be applied automatically.`,
       [
         { text: 'Use & Apply Discount', onPress: () => router.back() },
-        { text: 'Scan Again', onPress: () => { setScanned(false); setCameraKey(k => k + 1); setShowCamera(true); } },
+        { text: 'Scan Again', onPress: () => { setScanned(false); setCameraKey(k => k + 1); } },
       ]
     );
   };
@@ -75,30 +76,39 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-      {showCamera && (
+      {cameraReady && (
         <CameraView
           key={cameraKey}
           style={StyleSheet.absoluteFillObject}
           facing="back"
+          onCameraReady={() => console.log('Camera ready')}
           barcodeScannerSettings={{ barcodeTypes: ['ean13','ean8','upc_a','upc_e','code128','code39','qr'] }}
           onBarcodeScanned={mode === 'barcode' && !scanned ? handleBarcodeScanned : undefined}
         />
       )}
+
+      {!cameraReady && (
+        <View style={styles.loading}>
+          <Text style={styles.loadingText}>Starting camera...</Text>
+        </View>
+      )}
+
       <View style={styles.tabs}>
-        <Pressable style={[styles.tab, mode === 'barcode' && styles.tabActive]} onPress={() => { setMode('barcode'); setScanned(false); setCameraKey(k => k + 1); setShowCamera(true); }}>
+        <Pressable style={[styles.tab, mode === 'barcode' && styles.tabActive]} onPress={() => { setMode('barcode'); setScanned(false); setCameraKey(k => k + 1); }}>
           <Text style={mode === 'barcode' ? styles.tabTextActive : styles.tabText}>Barcode</Text>
         </Pressable>
         <Pressable style={[styles.tab, mode === 'ocr' && styles.tabActive]} onPress={() => setMode('ocr')}>
           <Text style={mode === 'ocr' ? styles.tabTextActive : styles.tabText}>Capture Expiry (OCR)</Text>
         </Pressable>
       </View>
+
       <View style={styles.overlay}>
         {mode === 'barcode' ? (
           <>
             <Text style={styles.instruction}>Align barcode in frame</Text>
             <View style={styles.scanFrame} />
             {scanned && (
-              <Pressable style={styles.captureButton} onPress={() => { setScanned(false); setCameraKey(k => k + 1); setShowCamera(true); }}>
+              <Pressable style={styles.captureButton} onPress={() => { setScanned(false); setCameraKey(k => k + 1); }}>
                 <Text style={styles.captureText}>Scan Again</Text>
               </Pressable>
             )}
@@ -122,6 +132,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#000' },
   centerText: { color: 'white', fontSize: 17, textAlign: 'center', marginBottom: 12 },
   centerSub: { color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center' },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { color: 'white', fontSize: 15 },
   tabs: { position: 'absolute', top: 60, left: 0, right: 0, zIndex: 10, flexDirection: 'row', justifyContent: 'center' },
   tab: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 20, marginHorizontal: 4 },
   tabActive: { backgroundColor: '#fff' },
