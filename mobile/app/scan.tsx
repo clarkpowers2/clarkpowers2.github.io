@@ -1,38 +1,44 @@
-import { View, Text, StyleSheet, Alert, Pressable, AppState } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Alert, Pressable } from 'react-native';
+import { useState, useEffect } from 'react';
 import { CameraView, Camera } from 'expo-camera';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 
 export default function ScanScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [mode, setMode] = useState<'barcode' | 'ocr'>('barcode');
-  const [isCameraActive, setIsCameraActive] = useState(true);
-  const appState = useRef(AppState.currentState);
+  const [cameraKey, setCameraKey] = useState(0);
+  const [showCamera, setShowCamera] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === 'granted');
+      if (status === 'granted') setShowCamera(true);
     })();
-    const subscription = AppState.addEventListener('change', next => {
-      setIsCameraActive(next === 'active');
-      appState.current = next;
-    });
-    return () => subscription.remove();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setShowCamera(true);
+      setScanned(false);
+      return () => setShowCamera(false);
+    }, [])
+  );
 
   const handleBarcodeScanned = ({ data }: { type: string; data: string }) => {
     if (scanned) return;
     setScanned(true);
-    setIsCameraActive(false);
+    setShowCamera(false);
     Alert.alert(
       'Barcode Detected',
       `Code: ${data}\n\nSmart discount will be applied automatically.`,
       [
         { text: 'Use & Apply Discount', onPress: () => router.back() },
-        { text: 'Scan Again', onPress: () => { setScanned(false); setIsCameraActive(true); } },
+        { text: 'Scan Again', onPress: () => { setScanned(false); setCameraKey(k => k + 1); setShowCamera(true); } },
       ]
     );
   };
@@ -69,15 +75,17 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={StyleSheet.absoluteFillObject}
-        facing="back"
-        active={isCameraActive}
-        barcodeScannerSettings={{ barcodeTypes: ['ean13','ean8','upc_a','upc_e','code128','code39','qr'] }}
-        onBarcodeScanned={mode === 'barcode' && !scanned ? handleBarcodeScanned : undefined}
-      />
+      {showCamera && (
+        <CameraView
+          key={cameraKey}
+          style={StyleSheet.absoluteFillObject}
+          facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ['ean13','ean8','upc_a','upc_e','code128','code39','qr'] }}
+          onBarcodeScanned={mode === 'barcode' && !scanned ? handleBarcodeScanned : undefined}
+        />
+      )}
       <View style={styles.tabs}>
-        <Pressable style={[styles.tab, mode === 'barcode' && styles.tabActive]} onPress={() => { setMode('barcode'); setScanned(false); setIsCameraActive(true); }}>
+        <Pressable style={[styles.tab, mode === 'barcode' && styles.tabActive]} onPress={() => { setMode('barcode'); setScanned(false); setCameraKey(k => k + 1); setShowCamera(true); }}>
           <Text style={mode === 'barcode' ? styles.tabTextActive : styles.tabText}>Barcode</Text>
         </Pressable>
         <Pressable style={[styles.tab, mode === 'ocr' && styles.tabActive]} onPress={() => setMode('ocr')}>
@@ -90,7 +98,7 @@ export default function ScanScreen() {
             <Text style={styles.instruction}>Align barcode in frame</Text>
             <View style={styles.scanFrame} />
             {scanned && (
-              <Pressable style={styles.captureButton} onPress={() => { setScanned(false); setIsCameraActive(true); }}>
+              <Pressable style={styles.captureButton} onPress={() => { setScanned(false); setCameraKey(k => k + 1); setShowCamera(true); }}>
                 <Text style={styles.captureText}>Scan Again</Text>
               </Pressable>
             )}
