@@ -39,13 +39,7 @@
           "cameraPermission": "Allow FreshSave Staff to access your camera to scan barcodes and expiry dates on products."
         }
       ],
-      "expo-image",
-      [
-        "react-native-vision-camera",
-        {
-          "cameraPermissionText": "FreshSave Staff needs camera access to scan product barcodes."
-        }
-      ]
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,
