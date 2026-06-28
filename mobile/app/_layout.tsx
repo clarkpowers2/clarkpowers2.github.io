@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 
 export default function RootLayout() {
@@ -10,8 +9,7 @@ export default function RootLayout() {
         <Stack.Screen 
           name="index" 
           options={{ 
-            title: "FreshSave Staff",
-            headerLargeTitle: true,
+            headerShown: false,
           }} 
         />
         <Stack.Screen 
