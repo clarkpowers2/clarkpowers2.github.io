@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Button, Alert, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Alert, Pressable } from 'react-native';
 import { useState, useEffect } from 'react';
 import { CameraView, Camera } from 'expo-camera';
 import { useRouter } from 'expo-router';
@@ -17,10 +17,11 @@ export default function ScanScreen() {
   }, []);
 
   const handleBarcodeScanned = ({ type, data }: { type: string; data: string }) => {
+    if (scanned) return;
     setScanned(true);
     Alert.alert(
       'Barcode Detected',
-      `Code: ${data}\n\nSmart discount would be applied automatically.`,
+      `Code: ${data}\n\nSmart discount will be applied automatically.`,
       [
         { text: 'Use & Apply Discount', onPress: () => router.back() },
         { text: 'Scan Again', onPress: () => setScanned(false) },
@@ -29,63 +30,76 @@ export default function ScanScreen() {
   };
 
   const simulateOCR = () => {
-    // Feature 5: OCR fallback simulation (like the web version)
     const mockResults = [
-      { expiry: '2025-06-12', product: 'Organic Ground Beef' },
-      { expiry: '2025-06-10', product: 'Fresh Blueberries' },
-      { expiry: '2025-06-08', product: 'Greek Yogurt 32oz' },
+      { expiry: new Date(Date.now() + 86400000).toISOString().split('T')[0], product: 'Organic Ground Beef' },
+      { expiry: new Date(Date.now() + 172800000).toISOString().split('T')[0], product: 'Fresh Blueberries' },
+      { expiry: new Date(Date.now() + 259200000).toISOString().split('T')[0], product: 'Greek Yogurt 32oz' },
     ];
     const result = mockResults[Math.floor(Math.random() * mockResults.length)];
-
     Alert.alert(
       'OCR Result',
       `Product: ${result.product}\nExpiry: ${result.expiry}\nConfidence: 94%`,
       [
-        {
-          text: 'Use This Date',
-          onPress: () => router.back(),
-        },
+        { text: 'Use This Date', onPress: () => router.back() },
         { text: 'Retake Photo', onPress: () => {} },
       ]
     );
   };
 
   if (hasPermission === null) {
-    return <View style={styles.center}><Text>Requesting camera permission...</Text></View>;
+    return (
+      <View style={styles.center}>
+        <Text style={styles.centerText}>Requesting camera permission...</Text>
+      </View>
+    );
   }
+
   if (hasPermission === false) {
-    return <View style={styles.center}><Text>No camera access</Text></View>;
+    return (
+      <View style={styles.center}>
+        <Text style={styles.centerText}>Camera access denied.</Text>
+        <Text style={styles.centerSub}>Go to Settings → FreshSave Staff → Camera and enable access.</Text>
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
+      {/* Camera fills entire screen */}
+      <CameraView
+        style={StyleSheet.absoluteFillObject}
+        facing="back"
+        barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr'] }}
+        onBarcodeScanned={mode === 'barcode' && !scanned ? handleBarcodeScanned : undefined}
+      />
+
+      {/* Mode tabs */}
       <View style={styles.tabs}>
-        <Pressable 
-          style={[styles.tab, mode === 'barcode' && styles.tabActive]} 
-          onPress={() => setMode('barcode')}
+        <Pressable
+          style={[styles.tab, mode === 'barcode' && styles.tabActive]}
+          onPress={() => { setMode('barcode'); setScanned(false); }}
         >
           <Text style={mode === 'barcode' ? styles.tabTextActive : styles.tabText}>Barcode</Text>
         </Pressable>
-        <Pressable 
-          style={[styles.tab, mode === 'ocr' && styles.tabActive]} 
+        <Pressable
+          style={[styles.tab, mode === 'ocr' && styles.tabActive]}
           onPress={() => setMode('ocr')}
         >
           <Text style={mode === 'ocr' ? styles.tabTextActive : styles.tabText}>Capture Expiry (OCR)</Text>
         </Pressable>
       </View>
 
-      <CameraView
-        style={StyleSheet.absoluteFillObject}
-        facing="back"
-        onBarcodeScanned={mode === 'barcode' && !scanned ? handleBarcodeScanned : undefined}
-      />
-
+      {/* Overlay content */}
       <View style={styles.overlay}>
         {mode === 'barcode' ? (
           <>
             <Text style={styles.instruction}>Align barcode in frame</Text>
             <View style={styles.scanFrame} />
-            {scanned && <Button title="Scan Again" onPress={() => setScanned(false)} />}
+            {scanned && (
+              <Pressable style={styles.captureButton} onPress={() => setScanned(false)}>
+                <Text style={styles.captureText}>Scan Again</Text>
+              </Pressable>
+            )}
           </>
         ) : (
           <>
@@ -102,18 +116,35 @@ export default function ScanScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  tabs: { flexDirection: 'row', position: 'absolute', top: 60, zIndex: 10, alignSelf: 'center' },
-  tab: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20, marginHorizontal: 4 },
+  container: { flex: 1, backgroundColor: '#000' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#000' },
+  centerText: { color: 'white', fontSize: 17, textAlign: 'center', marginBottom: 12 },
+  centerSub: { color: 'rgba(255,255,255,0.6)', fontSize: 14, textAlign: 'center' },
+  tabs: {
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 20,
+    marginHorizontal: 4,
+  },
   tabActive: { backgroundColor: '#fff' },
   tabText: { color: 'white', fontWeight: '600' },
   tabTextActive: { color: '#000', fontWeight: '700' },
   overlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    zIndex: 5,
   },
   instruction: {
     color: 'white',
