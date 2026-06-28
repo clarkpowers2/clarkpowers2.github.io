@@ -13,7 +13,6 @@ export default function StaffHome() {
     applySmartDiscount 
   } = useProducts();
 
-  // Group by urgency (ported + enhanced from web TodaysActionList)
   const critical = products.filter(p => {
     const info = calculateDiscountInfo(p);
     return info.urgencyLevel === 'critical' && p.status === 'pending';
@@ -34,30 +33,34 @@ export default function StaffHome() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Store Switcher - Feature 2 */}
-      <View style={styles.storeSwitcher}>
-        {stores.map(store => (
-          <Pressable
-            key={store.id}
-            style={[
-              styles.storePill,
-              currentStoreId === store.id && styles.storePillActive
-            ]}
-            onPress={() => switchStore(store.id)}
-          >
-            <Text style={currentStoreId === store.id ? styles.storePillTextActive : styles.storePillText}>
-              {store.name}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
+      
       <View style={styles.header}>
         <Text style={styles.title}>FreshSave Staff</Text>
         <Text style={styles.subtitle}>{currentStore.name} • Today</Text>
       </View>
 
-      {/* Big prominent Scan button */}
+      {/* Store Switcher - moved below header for easier tapping */}
+      <View style={styles.storeSwitcher}>
+        <Text style={styles.storeSwitcherLabel}>Select Store</Text>
+        <View style={styles.storePills}>
+          {stores.map(store => (
+            <Pressable
+              key={store.id}
+              style={[
+                styles.storePill,
+                currentStoreId === store.id && styles.storePillActive
+              ]}
+              onPress={() => switchStore(store.id)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={currentStoreId === store.id ? styles.storePillTextActive : styles.storePillText}>
+                {store.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
       <Link href="/scan" asChild>
         <Pressable style={styles.scanButton}>
           <Text style={styles.scanButtonText}>📷 Scan Product</Text>
@@ -65,7 +68,6 @@ export default function StaffHome() {
         </Pressable>
       </Link>
 
-      {/* Enhanced Today's Action List (Feature 4) */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Today's Action List</Text>
 
@@ -130,19 +132,25 @@ export default function StaffHome() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   content: { padding: 16, paddingBottom: 40 },
-  storeSwitcher: { flexDirection: 'row', marginBottom: 16, gap: 8 },
-  storePill: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#eee',
-  },
-  storePillActive: { backgroundColor: '#007AFF' },
-  storePillText: { color: '#333' },
-  storePillTextActive: { color: 'white', fontWeight: '600' },
   header: { marginBottom: 16 },
   title: { fontSize: 26, fontWeight: '700' },
   subtitle: { fontSize: 15, color: '#666', marginTop: 2 },
+  storeSwitcher: { marginBottom: 20 },
+  storeSwitcherLabel: { fontSize: 13, color: '#888', fontWeight: '600', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+  storePills: { flexDirection: 'row', gap: 10 },
+  storePill: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  storePillActive: { backgroundColor: '#007AFF', borderColor: '#007AFF' },
+  storePillText: { color: '#333', fontWeight: '600', fontSize: 15 },
+  storePillTextActive: { color: 'white', fontWeight: '700', fontSize: 15 },
   scanButton: {
     backgroundColor: '#007AFF',
     padding: 22,
@@ -182,7 +190,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: { color: 'white', fontWeight: '700' },
   secondaryButton: { padding: 14, alignItems: 'center', marginTop: 8 },
-  secondaryButtonText: { color: '#007AFF', fontSize: 16, fontWeight: '600' },
+  secondaryButtonText: { color: '007AFF', fontSize: 16, fontWeight: '600' },
   emptyState: { padding: 24, alignItems: 'center' },
   emptyText: { color: '#888', fontSize: 16 },
 });
