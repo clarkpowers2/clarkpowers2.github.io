@@ -1,0 +1,44 @@
+workflows:
+  ios-release:
+    name: iOS Release
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.freshsave.staff
+      vars:
+        BUNDLE_ID: com.freshsave.staff
+        XCODE_WORKSPACE: freshsave-mobile.xcworkspace
+        XCODE_SCHEME: freshsavemobile
+      node: v18.17.0
+    scripts:
+      - name: Install dependencies
+        script: |
+          cd mobile
+          npm install
+      - name: Set up iOS signing
+        script: |
+          xcode-project use-profiles
+      - name: Build iOS
+        script: |
+          cd mobile
+          npx expo prebuild --platform ios --clean
+          cd ios
+          xcodebuild -workspace freshsave-mobile.xcworkspace \
+            -scheme freshsavemobile \
+            -configuration Release \
+            -archivePath build/freshsave.xcarchive \
+            archive
+          xcodebuild -exportArchive \
+            -archivePath build/freshsave.xcarchive \
+            -exportOptionsPlist exportOptions.plist \
+            -exportPath build/ipa
+    artifacts:
+      - mobile/ios/build/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
