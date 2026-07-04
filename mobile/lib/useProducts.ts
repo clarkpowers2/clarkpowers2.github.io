@@ -2,29 +2,60 @@ import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product } from './types';
 
-const STORAGE_KEY = 'freshsave-mobile-products-v3';
+// Bumped to v4: v3 stored absolute expiry dates that go stale over time
+// (a device seeded days earlier showed "Expires in -4d"). v4 stores an
+// expiryOffsetDays on every demo item and recomputes expiryDate on each load.
+const STORAGE_KEY = 'freshsave-mobile-products-v4';
 const STORE_KEY = 'freshsave-current-store-v1';
 
 const today = (offsetDays: number) =>
   new Date(Date.now() + offsetDays * 86400000).toISOString().split('T')[0];
 
+// Recompute expiry dates for seeded demo items relative to "now" so review/demo
+// data is always fresh, no matter how long the build waits in the review queue.
+const refreshDemoDates = (items: Product[]): Product[] =>
+  items.map(p =>
+    p.expiryOffsetDays == null ? p : { ...p, expiryDate: today(p.expiryOffsetDays) }
+  );
+
+const demo = (
+  id: string,
+  name: string,
+  category: Product['category'],
+  originalPrice: number,
+  expiryOffsetDays: number,
+  storeId: string,
+  extra: Partial<Product> = {},
+): Product => ({
+  id,
+  name,
+  category,
+  originalPrice,
+  expiryOffsetDays,
+  expiryDate: today(expiryOffsetDays),
+  status: 'pending',
+  dateAdded: new Date().toISOString(),
+  storeId,
+  ...extra,
+});
+
 const DEFAULT_PRODUCTS: Product[] = [
-  { id: 'p1', name: 'Organic Chicken Breast', category: 'meat', originalPrice: 12.99, expiryDate: today(0), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p2', name: 'Ground Beef 1lb', category: 'meat', originalPrice: 8.49, expiryDate: today(0), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p3', name: 'Greek Yogurt 32oz', category: 'dairy', originalPrice: 5.99, expiryDate: today(0), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p4', name: 'Fresh Strawberries 1lb', category: 'fruit', originalPrice: 4.99, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p5', name: 'Salmon Fillet 12oz', category: 'meat', originalPrice: 14.99, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p6', name: 'Fresh Blueberries 6oz', category: 'fruit', originalPrice: 3.99, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p7', name: 'Whole Milk 1gal', category: 'dairy', originalPrice: 3.49, expiryDate: today(3), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p8', name: 'Cheddar Cheese 8oz', category: 'dairy', originalPrice: 4.29, expiryDate: today(3), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p9', name: 'Organic Baby Spinach', category: 'fruit', originalPrice: 3.99, expiryDate: today(2), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p10', name: 'Pork Chops 2lb', category: 'meat', originalPrice: 9.99, expiryDate: today(0), status: 'discounted', discountedPrice: 4.99, discountPercentage: 50, dateAdded: new Date().toISOString(), storeId: 'store-downtown' },
-  { id: 'p11', name: 'Turkey Breast Sliced', category: 'meat', originalPrice: 7.99, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-westside' },
-  { id: 'p12', name: 'Orange Juice 52oz', category: 'dairy', originalPrice: 4.49, expiryDate: today(2), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-westside' },
-  { id: 'p13', name: 'Bagels 6pk', category: 'dry', originalPrice: 3.99, expiryDate: today(2), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-westside' },
-  { id: 'p14', name: 'Rotisserie Chicken', category: 'meat', originalPrice: 8.99, expiryDate: today(0), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-eastgate' },
-  { id: 'p15', name: 'Raspberries 6oz', category: 'fruit', originalPrice: 3.49, expiryDate: today(1), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-eastgate' },
-  { id: 'p16', name: 'Cream Cheese 8oz', category: 'dairy', originalPrice: 3.99, expiryDate: today(2), status: 'pending', dateAdded: new Date().toISOString(), storeId: 'store-eastgate' },
+  demo('p1', 'Organic Chicken Breast', 'meat', 12.99, 0, 'store-downtown'),
+  demo('p2', 'Ground Beef 1lb', 'meat', 8.49, 0, 'store-downtown'),
+  demo('p3', 'Greek Yogurt 32oz', 'dairy', 5.99, 0, 'store-downtown'),
+  demo('p4', 'Fresh Strawberries 1lb', 'fruit', 4.99, 1, 'store-downtown'),
+  demo('p5', 'Salmon Fillet 12oz', 'meat', 14.99, 1, 'store-downtown'),
+  demo('p6', 'Fresh Blueberries 6oz', 'fruit', 3.99, 1, 'store-downtown'),
+  demo('p7', 'Whole Milk 1gal', 'dairy', 3.49, 3, 'store-downtown'),
+  demo('p8', 'Cheddar Cheese 8oz', 'dairy', 4.29, 3, 'store-downtown'),
+  demo('p9', 'Organic Baby Spinach', 'fruit', 3.99, 2, 'store-downtown'),
+  demo('p10', 'Pork Chops 2lb', 'meat', 9.99, 0, 'store-downtown', { status: 'discounted', discountedPrice: 4.99, discountPercentage: 50 }),
+  demo('p11', 'Turkey Breast Sliced', 'meat', 7.99, 1, 'store-westside'),
+  demo('p12', 'Orange Juice 52oz', 'dairy', 4.49, 2, 'store-westside'),
+  demo('p13', 'Bagels 6pk', 'dry-goods', 3.99, 2, 'store-westside'),
+  demo('p14', 'Rotisserie Chicken', 'meat', 8.99, 0, 'store-eastgate'),
+  demo('p15', 'Raspberries 6oz', 'fruit', 3.49, 1, 'store-eastgate'),
+  demo('p16', 'Cream Cheese 8oz', 'dairy', 3.99, 2, 'store-eastgate'),
 ];
 
 export const STORES = [
@@ -45,11 +76,14 @@ export function useProducts() {
           AsyncStorage.getItem(STORAGE_KEY),
           AsyncStorage.getItem(STORE_KEY),
         ]);
-        setProducts(stored ? JSON.parse(stored) : DEFAULT_PRODUCTS);
+        const base: Product[] = stored ? JSON.parse(stored) : DEFAULT_PRODUCTS;
+        const refreshed = refreshDemoDates(base);
+        setProducts(refreshed);
         if (savedStore) setCurrentStoreId(savedStore);
-        if (!stored) await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PRODUCTS));
+        // Persist the date-refreshed set so demo expiries never drift into the past.
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(refreshed));
       } catch (e) {
-        setProducts(DEFAULT_PRODUCTS);
+        setProducts(refreshDemoDates(DEFAULT_PRODUCTS));
       }
       setIsLoaded(true);
     }

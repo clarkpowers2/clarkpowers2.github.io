@@ -68,6 +68,6 @@ const styles = StyleSheet.create({
   name: { fontSize: 17, fontWeight: '600' },
   meta: { color: '#666', marginTop: 4 },
   price: { marginTop: 6, fontSize: 15 },
-  button: { backgroundColor: '#34C759', paddingHorizontal: 16, justifyContent: 'center', borderRadius: 8 },
+  button: { backgroundColor: '#15803D', paddingHorizontal: 16, justifyContent: 'center', borderRadius: 8 },
   buttonText: { color: 'white', fontWeight: '600' },
 });

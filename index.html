@@ -1,19 +1,347 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FreshSave App Store Connect Preview Dashboard</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f4;
+        --surface: #ffffff;
+        --ink: #14221b;
+        --muted: #647067;
+        --line: #dbe2da;
+        --accent: #147847;
+        --accent-2: #245f87;
+      }
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FreshSave Pro - Multi-Store Revenue Recovery Platform</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="/src/main.css" rel="stylesheet" />
-</head>
+      * {
+        box-sizing: border-box;
+      }
 
-<body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-</body>
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
 
+      header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+        padding: 28px 24px 22px;
+      }
+
+      main {
+        max-width: 1480px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.08;
+      }
+
+      h2 {
+        font-size: 22px;
+        line-height: 1.2;
+      }
+
+      h3 {
+        font-size: 15px;
+        line-height: 1.3;
+      }
+
+      .subhead {
+        max-width: 920px;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.5;
+      }
+
+      .status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .metric {
+        min-height: 70px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f9fbf8;
+        padding: 12px 14px;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      section + section {
+        margin-top: 32px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+
+      .section-note {
+        color: var(--muted);
+        font-size: 13px;
+        text-align: right;
+      }
+
+      .video-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+      }
+
+      .screen-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+        gap: 18px;
+      }
+
+      figure,
+      article {
+        margin: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--surface);
+      }
+
+      .frame {
+        padding: 10px;
+        background: #e9efe8;
+      }
+
+      video,
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 6px;
+        background: #fff;
+      }
+
+      video {
+        aspect-ratio: 886 / 1920;
+        object-fit: contain;
+      }
+
+      figcaption,
+      .screen-title {
+        border-top: 1px solid var(--line);
+        padding: 10px 12px 12px;
+      }
+
+      .label {
+        display: block;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 700;
+        word-break: break-word;
+      }
+
+      .meta {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .tag {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .variants {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        padding: 10px;
+        background: #f4f6f3;
+      }
+
+      .variant {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--surface);
+      }
+
+      .variant .frame {
+        padding: 6px;
+      }
+
+      .variant figcaption {
+        min-height: 58px;
+        padding: 8px;
+      }
+
+      .variant .label {
+        color: var(--accent-2);
+        font-size: 12px;
+      }
+
+      @media (max-width: 720px) {
+        header,
+        main {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        .section-head {
+          display: block;
+        }
+
+        .section-note {
+          margin-top: 5px;
+          text-align: left;
+        }
+
+        .screen-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .variants {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>FreshSave App Store Connect Preview Dashboard</h1>
+      <p class="subhead">
+        Browser review surface for FreshSave App Store screenshots and no-sound
+        preview videos. Assets load directly from
+        <code>FreshSave_App_Store/</code> for a GitHub Pages audit.
+      </p>
+      <div class="status" aria-label="Asset validation summary">
+        <div class="metric"><strong>12</strong><span>screen states</span></div>
+        <div class="metric"><strong>36</strong><span>PNG screenshot files</span></div>
+        <div class="metric"><strong>3</strong><span>MP4 preview videos</span></div>
+        <div class="metric"><strong>3</strong><span>device-size variants per state</span></div>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div class="section-head">
+          <h2>Preview Videos</h2>
+          <p class="section-note">Standalone MP4 assets with browser controls.</p>
+        </div>
+        <div class="video-grid" id="video-grid"></div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Screenshot Review Grid</h2>
+          <p class="section-note">Each screen state includes 6.9, 6.7, and 6.5 captures.</p>
+        </div>
+        <div class="screen-grid" id="screen-grid"></div>
+      </section>
+    </main>
+
+    <script>
+      const assetRoot = "FreshSave_App_Store";
+      const videos = ["preview_video_01.mp4", "preview_video_02.mp4", "preview_video_03.mp4"];
+      const devices = [
+        { key: "6.9", label: "6.9 inch" },
+        { key: "6.7", label: "6.7 inch" },
+        { key: "6.5", label: "6.5 inch" },
+      ];
+      const screens = [
+        "Dashboard: Downtown action list",
+        "Dashboard: Westside store selector",
+        "Dashboard: Eastgate task list",
+        "Dashboard: discount tasks",
+        "Dashboard: single item risk",
+        "Dashboard: all caught up",
+        "Products: apply and print",
+        "Smart discount: chicken",
+        "Smart discount: ground beef",
+        "Smart discount: yogurt",
+        "Label printed confirmation",
+        "Products: discounted prices",
+      ];
+
+      const videoGrid = document.querySelector("#video-grid");
+      videos.forEach((file, index) => {
+        const figure = document.createElement("figure");
+        figure.innerHTML = `
+          <div class="frame">
+            <video src="${assetRoot}/${file}" controls muted playsinline preload="metadata"></video>
+          </div>
+          <figcaption>
+            <span class="label">${file}</span>
+            <span class="meta"><span class="tag">No sound</span> · preview video ${index + 1}</span>
+          </figcaption>
+        `;
+        videoGrid.appendChild(figure);
+      });
+
+      const screenGrid = document.querySelector("#screen-grid");
+      screens.forEach((title, index) => {
+        const number = String(index + 1).padStart(2, "0");
+        const article = document.createElement("article");
+        article.innerHTML = `
+          <div class="screen-title">
+            <h3>${number}. ${title}</h3>
+            <span class="meta">Screen state ${number}</span>
+          </div>
+          <div class="variants">
+            ${devices
+              .map((device) => {
+                const file = `screenshot_${device.key}_${number}.png`;
+                return `
+                  <figure class="variant">
+                    <div class="frame">
+                      <img src="${assetRoot}/${file}" alt="FreshSave ${title} ${device.label} screenshot" loading="lazy" />
+                    </div>
+                    <figcaption>
+                      <span class="label">${device.label}</span>
+                      <span class="meta">${file}</span>
+                    </figcaption>
+                  </figure>
+                `;
+              })
+              .join("")}
+          </div>
+        `;
+        screenGrid.appendChild(article);
+      });
+    </script>
+  </body>
 </html>
