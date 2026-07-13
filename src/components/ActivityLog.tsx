@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card'
 import { Activity } from '@/lib/types'
 import { format, parseISO } from 'date-fns'
-import { Tag, Printer, Plus, Trash, ShoppingCart } from '@phosphor-icons/react'
+import { Tag, Printer, Plus, Trash, ShoppingCart, CurrencyDollar } from '@phosphor-icons/react'
 
 interface ActivityLogProps {
   activities: Activity[]
@@ -14,6 +14,8 @@ export function ActivityLog({ activities }: ActivityLogProps) {
         return <Tag size={16} weight="bold" className="text-primary" />
       case 'label_printed':
         return <Printer size={16} weight="bold" className="text-info" />
+      case 'price_changed':
+        return <CurrencyDollar size={16} weight="bold" className="text-success" />
       case 'product_added':
         return <Plus size={16} weight="bold" className="text-success" />
       case 'product_sold':
@@ -29,6 +31,8 @@ export function ActivityLog({ activities }: ActivityLogProps) {
         return `applied ${activity.metadata?.discountPercentage}% discount to`
       case 'label_printed':
         return 'printed label for'
+      case 'price_changed':
+        return `changed price from $${activity.metadata?.originalPrice?.toFixed(2) ?? '--'} to $${activity.metadata?.newPrice?.toFixed(2) ?? '--'} for`
       case 'product_added':
         return 'added'
       case 'product_sold':

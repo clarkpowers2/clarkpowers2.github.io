@@ -12,11 +12,20 @@ export interface Product {
   dateAdded: string
   storeId: string
   customDiscountPercentage?: number
+  priceUpdatedAt?: string
+  priceChangeReason?: string
   discountedBy?: string
   discountedAt?: string
   labeledBy?: string
   labeledAt?: string
   soldAt?: string
+}
+
+export interface PatternSummary {
+  category: ProductCategory
+  discountedCount: number
+  expiredLostCount: number
+  expiredLostRevenue: number
 }
 
 export interface DiscountInfo {
@@ -33,6 +42,10 @@ export interface Store {
   name: string
   location: string
   createdAt: string
+  subscriptionStatus?: string
+  trialStartedAt?: string | null
+  trialStartDate?: string | null
+  trialEndDate?: string | null
 }
 
 export interface Activity {
@@ -40,13 +53,16 @@ export interface Activity {
   storeId: string
   productId: string
   productName: string
-  action: 'discount_applied' | 'label_printed' | 'product_added' | 'product_sold' | 'product_removed'
+  action: 'discount_applied' | 'label_printed' | 'price_changed' | 'product_added' | 'product_sold' | 'product_removed'
   staffMember: string
   timestamp: string
   metadata?: {
     originalPrice?: number
+    newPrice?: number
     discountedPrice?: number
     discountPercentage?: number
+    reason?: string
+    labelType?: 'discount' | 'price-change'
   }
 }
 

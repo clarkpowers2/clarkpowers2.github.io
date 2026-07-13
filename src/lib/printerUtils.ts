@@ -100,18 +100,32 @@ export const sendToPrinter = async (
 export const generateZPL = (productData: {
   name: string
   originalPrice: number
-  discountedPrice: number
-  discountPercentage: number
-  expiryDate: string
+  discountedPrice?: number
+  discountPercentage?: number
+  expiryDate?: string
+  labelType?: 'discount' | 'price-change'
   barcode?: string
 }): string => {
+  if (productData.labelType === 'price-change') {
+    return `^XA
+^FO50,50^A0N,44,44^FDNEW SHELF PRICE^FS
+^FO50,120^A0N,30,30^FD${productData.name}^FS
+^FO50,190^A0N,24,24^FDRegular Price^FS
+^FO50,230^A0N,58,58^FD$${productData.originalPrice.toFixed(2)}^FS
+${productData.barcode ? `^FO50,320^BCN,100,Y,N,N^FD${productData.barcode}^FS` : ''}
+^XZ`
+  }
+
+  const discountedPrice = productData.discountedPrice ?? productData.originalPrice
+  const discountPercentage = productData.discountPercentage ?? 0
+
   return `^XA
 ^FO50,50^A0N,50,50^FDSALE!^FS
 ^FO50,120^A0N,30,30^FD${productData.name}^FS
 ^FO50,170^A0N,25,25^FDWas: $${productData.originalPrice.toFixed(2)}^FS
-^FO50,210^A0N,40,40^FD$${productData.discountedPrice.toFixed(2)}^FS
-^FO50,270^A0N,25,25^FD${productData.discountPercentage}% OFF^FS
-^FO50,310^A0N,20,20^FDExp: ${productData.expiryDate}^FS
+^FO50,210^A0N,40,40^FD$${discountedPrice.toFixed(2)}^FS
+^FO50,270^A0N,25,25^FD${discountPercentage}% OFF^FS
+^FO50,310^A0N,20,20^FDExp: ${productData.expiryDate ?? ''}^FS
 ${productData.barcode ? `^FO50,350^BCN,100,Y,N,N^FD${productData.barcode}^FS` : ''}
 ^XZ`
 }

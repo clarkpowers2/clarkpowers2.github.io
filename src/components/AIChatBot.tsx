@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Brain, PaperPlaneRight, X, Sparkle, User, Robot } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Product } from '@/lib/types'
+import { PatternSummary, Product } from '@/lib/types'
+import { insforge } from '@/lib/insforge'
 
 interface Message {
   id: string
@@ -18,16 +19,17 @@ interface Message {
 
 interface AIChatBotProps {
   products: Product[]
+  patternSummary: PatternSummary[]
   isOpen: boolean
   onClose: () => void
 }
 
-export function AIChatBot({ products, isOpen, onClose }: AIChatBotProps) {
+export function AIChatBot({ products, patternSummary, isOpen, onClose }: AIChatBotProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m your FreshSave AI Assistant. I can help you with discount strategies, product insights, inventory analysis, and answer questions about your expiring products. How can I help you today?',
+      content: 'Cosmo has arrived, clipboard calibrated and mildly offended by Earth produce logistics. Ask me which markdowns deserve immediate action, what patterns are forming, or where your inventory is quietly plotting against revenue.',
       timestamp: new Date()
     }
   ])
@@ -87,49 +89,31 @@ export function AIChatBot({ products, isOpen, onClose }: AIChatBotProps) {
   }
 
   const getAIResponse = async (userQuery: string): Promise<string> => {
-    const pendingProducts = products.filter(p => p.status === 'pending')
-    const discountedProducts = products.filter(p => p.status === 'discounted')
-    const labeledProducts = products.filter(p => p.status === 'labeled')
+    const { data, error } = await insforge.functions.invoke<{ response?: string; error?: string }>('cosmo-chat', {
+      body: {
+        userQuery,
+        products,
+        patternSummary,
+        messages: messages.slice(-6).map(message => ({
+          role: message.role,
+          content: message.content,
+        })),
+      },
+    })
 
-    const productSummary = {
-      total: products.length,
-      pending: pendingProducts.length,
-      discounted: discountedProducts.length,
-      labeled: labeledProducts.length,
-      categories: Array.from(new Set(products.map(p => p.category))),
-      expiringToday: products.filter(p => {
-        const today = new Date()
-        const expiry = new Date(p.expiryDate)
-        const diffTime = expiry.getTime() - today.getTime()
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-        return diffDays <= 1
-      }).length,
-      totalValue: products.reduce((sum, p) => sum + p.originalPrice, 0)
+    if (error) {
+      return `Cosmo reached the InsForge relay, but the relay filed a grievance: ${error.message}. The produce math remains immaculate; the function transmission did not.`
     }
 
-    const prompt = spark.llmPrompt`You are an AI assistant for FreshSave Pro, a revenue recovery platform for grocery stores managing expiring products.
+    if (data?.error) {
+      return data.error
+    }
 
-Current Inventory Status:
-- Total Products: ${productSummary.total}
-- Pending Action: ${productSummary.pending}
-- Discounted: ${productSummary.discounted}
-- Labeled: ${productSummary.labeled}
-- Expiring Today: ${productSummary.expiringToday}
-- Categories: ${productSummary.categories.join(', ')}
-- Total Inventory Value: $${productSummary.totalValue.toFixed(2)}
+    if (!data?.response) {
+      return 'Cosmo received no usable response from the server-side cognition vault. This is exactly why the Galactic Forms Office discourages empty envelopes.'
+    }
 
-User Question: ${userQuery}
-
-Provide a helpful, actionable response. Be concise but informative. If the user asks about:
-- Discount strategies: Suggest optimal discount percentages based on urgency
-- Inventory insights: Analyze patterns and provide recommendations
-- Product questions: Reference specific products if relevant
-- Best practices: Share tips for maximizing revenue recovery
-
-Keep responses under 150 words and action-oriented.`
-
-    const response = await spark.llm(prompt, 'gpt-4o-mini', false)
-    return response
+    return data.response
   }
 
   const getSuggestedQuestions = () => [
@@ -168,8 +152,8 @@ Keep responses under 150 words and action-oriented.`
                 <Brain size={24} weight="bold" className="text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-white">AI Assistant</h3>
-                <p className="text-xs text-white/80">Powered by GPT-4</p>
+                <h3 className="font-bold text-white">Cosmo</h3>
+                <p className="text-xs text-white/80">Powered by FreshSave Intelligence</p>
               </div>
             </div>
             <Button

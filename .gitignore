@@ -22,6 +22,7 @@ packages
 !.env.example
 !.env.*.example
 *.local
+.env.local
 
 # Local credentials and generated secrets
 *.pem
@@ -54,3 +55,18 @@ pids
 .devcontainer/
 
 .spark-workbench-id
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf

@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useKV } from '@github/spark/hooks'
 import { Product } from '@/lib/types'
-import { NetworkPrinter, PrintJob, BulkPrintSettings } from '@/lib/printerTypes'
-import { 
-  discoverNetworkPrinters, 
-  sendToPrinter, 
-  testPrinterConnection,
-  getPrinterStatusColor,
-  getPrinterStatusBadgeVariant,
-  generateZPL
-} from '@/lib/printerUtils'
+import { PrintJob, BulkPrintSettings } from '@/lib/printerTypes'
+import { generateZPL } from '@/lib/printerUtils'
 import { calculateDiscountInfo } from '@/lib/productUtils'
+import {
+  downloadLabelsPdf,
+  LabelOutputMethod,
+  LabelOutputResolution,
+  LabelPrintItem,
+  printLabelsInBrowser,
+  resolveLabelOutputMethod,
+  sendZplToZebra
+} from '@/lib/labelOutput'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -22,35 +24,37 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Progress } from '@/components/ui/progress'
-import { 
-  Printer, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Printer,
   CircleNotch,
-  WifiHigh,
-  WifiX,
   Stack,
-  Tag
+  Tag,
+  FilePdf,
+  Desktop,
+  CheckCircle
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
+
+type BulkLabelMode = 'discount' | 'price-change'
 
 interface BulkPrinterModeProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   products: Product[]
-  onPrintComplete?: (productIds: string[]) => void
+  onPrintComplete?: (productIds: string[], labelMode: BulkLabelMode) => void
 }
 
 export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete }: BulkPrinterModeProps) {
-  const [printers, setPrinters] = useKV<NetworkPrinter[]>('freshsave-pro-printers', [])
-  const [printJobs, setPrintJobs] = useKV<PrintJob[]>('freshsave-pro-print-jobs', [])
+  const [, setPrintJobs] = useKV<PrintJob[]>('freshsave-pro-print-jobs', [])
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
-  const [selectedPrinter, setSelectedPrinter] = useState<string>('')
   const [copies, setCopies] = useState(1)
-  const [isScanning, setIsScanning] = useState(false)
+  const [outputMethod, setOutputMethod] = useState<LabelOutputMethod>('auto')
+  const [outputResolution, setOutputResolution] = useState<LabelOutputResolution | null>(null)
+  const [isDetecting, setIsDetecting] = useState(false)
   const [isPrinting, setIsPrinting] = useState(false)
   const [printProgress, setPrintProgress] = useState(0)
+  const [labelMode, setLabelMode] = useState<BulkLabelMode>('discount')
   const [settings, setSettings] = useState<BulkPrintSettings>({
     printerId: '',
     copies: 1,
@@ -61,38 +65,35 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
     orientation: 'portrait'
   })
 
-  const discountedProducts = products.filter(p => 
+  const discountedProducts = products.filter(p =>
     p.status === 'discounted' || p.status === 'labeled'
   )
+  const recentlyPriceChangedProducts = products.filter(product => (
+    product.priceUpdatedAt != null
+    && Date.parse(product.priceUpdatedAt) >= Date.now() - 24 * 60 * 60 * 1000
+  ))
+  const printableProducts = labelMode === 'price-change'
+    ? recentlyPriceChangedProducts
+    : discountedProducts
 
   useEffect(() => {
-    if (open && (!printers || printers.length === 0)) {
-      scanForPrinters()
-    }
-  }, [open])
+    if (!open) return
 
-  useEffect(() => {
-    if (printers && printers.length > 0 && !selectedPrinter) {
-      const defaultPrinter = printers.find(p => p.isDefault)
-      if (defaultPrinter) {
-        setSelectedPrinter(defaultPrinter.id)
-        setSettings(prev => ({ ...prev, printerId: defaultPrinter.id }))
-      }
-    }
-  }, [printers, selectedPrinter])
+    let cancelled = false
+    setIsDetecting(true)
 
-  const scanForPrinters = async () => {
-    setIsScanning(true)
-    try {
-      const discovered = await discoverNetworkPrinters()
-      setPrinters(discovered)
-      toast.success(`Found ${discovered.length} network printers`)
-    } catch (error) {
-      toast.error('Failed to scan for printers')
-    } finally {
-      setIsScanning(false)
+    resolveLabelOutputMethod(outputMethod)
+      .then((resolution) => {
+        if (!cancelled) setOutputResolution(resolution)
+      })
+      .finally(() => {
+        if (!cancelled) setIsDetecting(false)
+      })
+
+    return () => {
+      cancelled = true
     }
-  }
+  }, [open, outputMethod])
 
   const toggleProductSelection = (productId: string) => {
     setSelectedProducts(prev => {
@@ -107,11 +108,36 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
   }
 
   const selectAll = () => {
-    setSelectedProducts(new Set(discountedProducts.map(p => p.id)))
+    setSelectedProducts(new Set(printableProducts.map(p => p.id)))
   }
 
   const deselectAll = () => {
     setSelectedProducts(new Set())
+  }
+
+  const buildPrintItems = (): LabelPrintItem[] => {
+    return Array.from(selectedProducts)
+      .map(productId => products.find(p => p.id === productId))
+      .filter((product): product is Product => Boolean(product))
+      .map((product) => {
+        const discountInfo = calculateDiscountInfo(product)
+        const isPriceChangeLabel = labelMode === 'price-change'
+
+        return {
+          product,
+          labelType: labelMode,
+          includeBarcode: settings.includeBarcode,
+          zpl: generateZPL({
+            name: product.name,
+            originalPrice: product.originalPrice,
+            discountedPrice: isPriceChangeLabel ? undefined : discountInfo.discountedPrice,
+            discountPercentage: isPriceChangeLabel ? undefined : discountInfo.discountPercentage,
+            expiryDate: isPriceChangeLabel ? undefined : product.expiryDate,
+            labelType: labelMode,
+            barcode: settings.includeBarcode ? `PRD${product.id.slice(-8).toUpperCase()}` : undefined
+          })
+        }
+      })
   }
 
   const handleBulkPrint = async () => {
@@ -120,78 +146,71 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
       return
     }
 
-    if (!selectedPrinter) {
-      toast.error('Please select a printer')
-      return
-    }
-
-    const printer = printers?.find(p => p.id === selectedPrinter)
-    if (!printer) {
-      toast.error('Selected printer not found')
+    const items = buildPrintItems()
+    if (items.length === 0) {
+      toast.error('No selected products are available to print')
       return
     }
 
     setIsPrinting(true)
     setPrintProgress(0)
 
-    const productsToPrint = Array.from(selectedProducts)
-    const totalItems = productsToPrint.length * copies
+    const productIds = items.map(item => item.product.id)
+    const totalItems = items.length * copies
+    const printJob: PrintJob = {
+      id: `job-${Date.now()}`,
+      productIds,
+      printerId: outputMethod,
+      status: 'printing',
+      createdAt: new Date().toISOString(),
+      copies
+    }
+
+    setPrintJobs(current => [...(current || []), printJob])
 
     try {
-      const isOnline = await testPrinterConnection(printer)
-      if (!isOnline) {
-        toast.error(`Printer "${printer.name}" is offline`)
-        setIsPrinting(false)
+      if (outputMethod === 'pdf') {
+        const resolution: LabelOutputResolution = {
+          method: 'pdf',
+          zebra: { available: false, reason: 'PDF selected' }
+        }
+
+        setOutputResolution(resolution)
+        downloadLabelsPdf(expandCopies(items, copies), getBulkFilename(labelMode))
+        setPrintProgress(100)
+
+        setPrintJobs(current =>
+          (current || []).map(j =>
+            j.id === printJob.id
+              ? { ...j, status: 'completed' as const, completedAt: new Date().toISOString() }
+              : j
+          )
+        )
+
+        toast.success(`PDF download started for ${totalItems} label${totalItems !== 1 ? 's' : ''}`, {
+          description: getModeLabel(resolution)
+        })
+
+        onPrintComplete?.(productIds, labelMode)
+        setSelectedProducts(new Set())
         return
       }
 
-      const printJob: PrintJob = {
-        id: `job-${Date.now()}`,
-        productIds: productsToPrint,
-        printerId: printer.id,
-        status: 'printing',
-        createdAt: new Date().toISOString(),
-        copies
-      }
+      const resolution = await resolveLabelOutputMethod(outputMethod)
+      setOutputResolution(resolution)
 
-      setPrintJobs(current => [...(current || []), printJob])
-
-      let printed = 0
-
-      for (const productId of productsToPrint) {
-        const product = products.find(p => p.id === productId)
-        if (!product) continue
-
-        const discountInfo = calculateDiscountInfo(product)
-
-        const labelData = generateZPL({
-          name: product.name,
-          originalPrice: product.originalPrice,
-          discountedPrice: discountInfo.discountedPrice,
-          discountPercentage: discountInfo.discountPercentage,
-          expiryDate: product.expiryDate,
-          barcode: settings.includeBarcode ? `PRD${product.id.slice(-8)}` : undefined
-        })
-
-        for (let i = 0; i < copies; i++) {
-          const result = await sendToPrinter(printer, labelData, 1)
-          
-          if (!result.success) {
-            toast.error(`Print failed: ${result.error}`)
-            setPrintJobs(current =>
-              (current || []).map(j =>
-                j.id === printJob.id
-                  ? { ...j, status: 'failed' as const, errorMessage: result.error }
-                  : j
-              )
-            )
-            setIsPrinting(false)
-            return
+      if (resolution.method === 'zebra') {
+        let printed = 0
+        for (const item of items) {
+          for (let i = 0; i < copies; i++) {
+            await sendZplToZebra(item.zpl)
+            printed++
+            setPrintProgress((printed / totalItems) * 100)
           }
-
-          printed++
-          setPrintProgress((printed / totalItems) * 100)
         }
+      } else {
+        printLabelsInBrowser(expandCopies(items, copies), settings.labelSize)
+        setPrintProgress(100)
       }
 
       setPrintJobs(current =>
@@ -202,37 +221,45 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
         )
       )
 
-      toast.success(`Successfully printed ${totalItems} labels!`)
-      
-      if (onPrintComplete) {
-        onPrintComplete(productsToPrint)
-      }
+      toast.success(`Started output for ${totalItems} label${totalItems !== 1 ? 's' : ''}`, {
+        description: getModeLabel(resolution)
+      })
 
+      onPrintComplete?.(productIds, labelMode)
       setSelectedProducts(new Set())
     } catch (error) {
-      toast.error('Print job failed')
+      setPrintJobs(current =>
+        (current || []).map(j =>
+          j.id === printJob.id
+            ? { ...j, status: 'failed' as const, errorMessage: error instanceof Error ? error.message : 'Print failed' }
+            : j
+        )
+      )
+
+      toast.error('Label output failed', {
+        description: error instanceof Error ? error.message : 'Check the selected output method and try again'
+      })
     } finally {
       setIsPrinting(false)
-      setPrintProgress(0)
+      setTimeout(() => setPrintProgress(0), 800)
     }
   }
 
-  const testPrint = async () => {
-    if (!selectedPrinter) {
-      toast.error('Please select a printer')
+  const handleDownloadPdf = () => {
+    const items = buildPrintItems()
+
+    if (items.length === 0) {
+      toast.error('Please select products to download')
       return
     }
 
-    const printer = printers?.find(p => p.id === selectedPrinter)
-    if (!printer) return
-
-    toast.info('Testing printer connection...')
-    
-    const isOnline = await testPrinterConnection(printer)
-    if (isOnline) {
-      toast.success(`Printer "${printer.name}" is ready!`)
-    } else {
-      toast.error(`Printer "${printer.name}" is offline`)
+    try {
+      downloadLabelsPdf(expandCopies(items, copies), getBulkFilename(labelMode))
+      toast.success(`PDF download started for ${items.length * copies} label${items.length * copies !== 1 ? 's' : ''}`)
+    } catch (error) {
+      toast.error('PDF download failed', {
+        description: error instanceof Error ? error.message : 'Unable to generate PDF'
+      })
     }
   }
 
@@ -242,16 +269,39 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Printer size={24} weight="fill" className="text-primary" />
-            Bulk Printer Mode
+            Bulk Label Output
           </DialogTitle>
           <DialogDescription>
-            Select products and print labels in bulk to your network printer
+            Select discount or price-change labels and output them through thermal, standard print, or PDF.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
           <div className="lg:col-span-2 flex flex-col gap-4 overflow-hidden">
             <Card className="p-4">
+              <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <Button
+                  type="button"
+                  variant={labelMode === 'discount' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setLabelMode('discount')
+                    setSelectedProducts(new Set())
+                  }}
+                >
+                  Discount Labels
+                </Button>
+                <Button
+                  type="button"
+                  variant={labelMode === 'price-change' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setLabelMode('price-change')
+                    setSelectedProducts(new Set(recentlyPriceChangedProducts.map(product => product.id)))
+                  }}
+                >
+                  Recently Changed Prices
+                </Button>
+              </div>
+
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Stack size={20} weight="bold" />
@@ -268,17 +318,26 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
               </div>
 
               <ScrollArea className="h-[400px]">
-                {discountedProducts.length === 0 ? (
+                {printableProducts.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Tag size={48} weight="light" className="mx-auto mb-4 opacity-30" />
-                    <p>No discounted products available</p>
-                    <p className="text-sm mt-2">Apply discounts to products first</p>
+                    <p>
+                      {labelMode === 'price-change'
+                        ? 'No recent price changes available'
+                        : 'No discounted products available'}
+                    </p>
+                    <p className="text-sm mt-2">
+                      {labelMode === 'price-change'
+                        ? 'Update prices first, then print all changed shelf labels here'
+                        : 'Apply discounts to products first'}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {discountedProducts.map((product) => {
+                    {printableProducts.map((product) => {
                       const discountInfo = calculateDiscountInfo(product)
                       const isSelected = selectedProducts.has(product.id)
+                      const isPriceChangeLabel = labelMode === 'price-change'
 
                       return (
                         <motion.div
@@ -286,8 +345,8 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                            isSelected 
-                              ? 'border-primary bg-primary/5' 
+                            isSelected
+                              ? 'border-primary bg-primary/5'
                               : 'border-border hover:border-primary/50'
                           }`}
                           onClick={() => toggleProductSelection(product.id)}
@@ -306,18 +365,37 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
                                     <Badge variant="secondary" className="text-xs capitalize">
                                       {product.category}
                                     </Badge>
-                                    <Badge variant="outline" className="text-xs">
-                                      {discountInfo.discountPercentage}% OFF
-                                    </Badge>
+                                    {isPriceChangeLabel ? (
+                                      <Badge variant="outline" className="text-xs">
+                                        New shelf price
+                                      </Badge>
+                                    ) : (
+                                      <Badge variant="outline" className="text-xs">
+                                        {discountInfo.discountPercentage}% OFF
+                                      </Badge>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <p className="text-sm line-through text-muted-foreground">
-                                    ${product.originalPrice.toFixed(2)}
-                                  </p>
-                                  <p className="text-lg font-bold text-primary">
-                                    ${discountInfo.discountedPrice.toFixed(2)}
-                                  </p>
+                                  {isPriceChangeLabel ? (
+                                    <>
+                                      <p className="text-xs text-muted-foreground">
+                                        Updated {product.priceUpdatedAt ? new Date(product.priceUpdatedAt).toLocaleDateString() : ''}
+                                      </p>
+                                      <p className="text-lg font-bold text-primary">
+                                        ${product.originalPrice.toFixed(2)}
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <p className="text-sm line-through text-muted-foreground">
+                                        ${product.originalPrice.toFixed(2)}
+                                      </p>
+                                      <p className="text-lg font-bold text-primary">
+                                        ${discountInfo.discountedPrice.toFixed(2)}
+                                      </p>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -333,89 +411,61 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
 
           <div className="flex flex-col gap-4">
             <Card className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Printer size={20} weight="bold" />
-                  Network Printers
-                </h3>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={scanForPrinters}
-                  disabled={isScanning}
-                >
-                  {isScanning ? (
-                    <>
-                      <CircleNotch size={16} weight="bold" className="mr-2 animate-spin" />
-                      Scanning
-                    </>
-                  ) : (
-                    'Scan'
-                  )}
-                </Button>
-              </div>
+              <h3 className="font-semibold flex items-center gap-2 mb-4">
+                <Printer size={20} weight="bold" />
+                Output Method
+              </h3>
 
-              <div className="space-y-3">
-                {!printers || printers.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Printer size={40} weight="light" className="mx-auto mb-3 opacity-30" />
-                    <p className="text-sm">No printers found</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-3"
-                      onClick={scanForPrinters}
-                    >
-                      Scan for Printers
-                    </Button>
-                  </div>
-                ) : (
-                  printers.map((printer) => (
-                    <div
-                      key={printer.id}
-                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                        selectedPrinter === printer.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                      onClick={() => {
-                        setSelectedPrinter(printer.id)
-                        setSettings(prev => ({ ...prev, printerId: printer.id }))
-                      }}
-                    >
-                      <div className="flex items-start gap-2">
-                        {printer.status === 'online' ? (
-                          <WifiHigh size={20} weight="bold" className="text-success mt-0.5" />
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="output-method" className="text-sm font-medium">
+                    Method
+                  </Label>
+                  <Select value={outputMethod} onValueChange={(val) => setOutputMethod(val as LabelOutputMethod)}>
+                    <SelectTrigger id="output-method" className="mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto Detect</SelectItem>
+                      <SelectItem value="zebra">Zebra Thermal</SelectItem>
+                      <SelectItem value="browser">Standard Print</SelectItem>
+                      <SelectItem value="pdf">Download PDF</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="rounded-lg border bg-muted/40 p-3">
+                  <div className="flex items-center gap-2">
+                    {isDetecting ? (
+                      <>
+                        <CircleNotch size={18} className="animate-spin text-muted-foreground" />
+                        <Badge variant="outline">Looking for label printer...</Badge>
+                      </>
+                    ) : (
+                      <>
+                        {outputResolution?.method === 'zebra' ? (
+                          <CheckCircle size={18} weight="fill" className="text-success" />
+                        ) : outputResolution?.method === 'pdf' ? (
+                          <FilePdf size={18} weight="bold" className="text-primary" />
                         ) : (
-                          <WifiX size={20} weight="bold" className="text-muted-foreground mt-0.5" />
+                          <Desktop size={18} weight="bold" className="text-primary" />
                         )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{printer.name}</p>
-                          <p className="text-xs text-muted-foreground">{printer.location}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge 
-                              variant={getPrinterStatusBadgeVariant(printer.status)}
-                              className="text-xs capitalize"
-                            >
-                              {printer.status.replace('-', ' ')}
-                            </Badge>
-                            {printer.isDefault && (
-                              <Badge variant="outline" className="text-xs">
-                                Default
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
+                        <Badge variant={outputResolution?.method === 'zebra' ? 'default' : 'secondary'}>
+                          {outputResolution ? getModeLabel(outputResolution) : 'Using standard print'}
+                        </Badge>
+                      </>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {outputResolution?.fallbackReason || outputResolution?.zebra.deviceName || outputResolution?.zebra.reason || 'Auto checks Zebra Browser Print first, then uses standard print.'}
+                  </p>
+                </div>
               </div>
             </Card>
 
             <Card className="p-4">
               <h3 className="font-semibold mb-4">Print Settings</h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="copies" className="text-sm font-medium">
@@ -442,9 +492,9 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
                   <Label htmlFor="label-size" className="text-sm font-medium">
                     Label Size
                   </Label>
-                  <Select 
-                    value={settings.labelSize} 
-                    onValueChange={(val: 'small' | 'medium' | 'large') => 
+                  <Select
+                    value={settings.labelSize}
+                    onValueChange={(val: 'small' | 'medium' | 'large') =>
                       setSettings(prev => ({ ...prev, labelSize: val }))
                     }
                   >
@@ -452,9 +502,9 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="small">Small (2" × 3")</SelectItem>
-                      <SelectItem value="medium">Medium (4" × 6")</SelectItem>
-                      <SelectItem value="large">Large (4" × 8")</SelectItem>
+                      <SelectItem value="small">Small (2" x 3")</SelectItem>
+                      <SelectItem value="medium">Medium (4" x 6")</SelectItem>
+                      <SelectItem value="large">Large (4" x 8")</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -493,7 +543,7 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
               {isPrinting && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Printing...</span>
+                    <span className="text-muted-foreground">Outputting...</span>
                     <span className="font-medium">{Math.round(printProgress)}%</span>
                   </div>
                   <Progress value={printProgress} className="h-2" />
@@ -502,31 +552,32 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
 
               <Button
                 onClick={handleBulkPrint}
-                disabled={selectedProducts.size === 0 || !selectedPrinter || isPrinting}
+                disabled={selectedProducts.size === 0 || isPrinting || isDetecting}
                 className="w-full"
                 size="lg"
               >
                 {isPrinting ? (
                   <>
                     <CircleNotch size={20} weight="bold" className="mr-2 animate-spin" />
-                    Printing {Math.round(printProgress)}%
+                    Outputting {Math.round(printProgress)}%
                   </>
                 ) : (
                   <>
                     <Printer size={20} weight="bold" className="mr-2" />
-                    Print {selectedProducts.size} Label{selectedProducts.size !== 1 ? 's' : ''} 
-                    {copies > 1 ? ` (×${copies})` : ''}
+                    Print {selectedProducts.size} Label{selectedProducts.size !== 1 ? 's' : ''}
+                    {copies > 1 ? ` (x${copies})` : ''}
                   </>
                 )}
               </Button>
 
               <Button
                 variant="outline"
-                onClick={testPrint}
-                disabled={!selectedPrinter || isPrinting}
+                onClick={handleDownloadPdf}
+                disabled={selectedProducts.size === 0 || isPrinting}
                 className="w-full"
               >
-                Test Printer Connection
+                <FilePdf size={18} weight="bold" className="mr-2" />
+                Download Labels (PDF)
               </Button>
             </div>
           </div>
@@ -534,4 +585,25 @@ export function BulkPrinterMode({ open, onOpenChange, products, onPrintComplete 
       </DialogContent>
     </Dialog>
   )
+}
+
+const expandCopies = (items: LabelPrintItem[], copies: number): LabelPrintItem[] => {
+  return Array.from({ length: copies }).flatMap(() => items)
+}
+
+const getModeLabel = (resolution: LabelOutputResolution): string => {
+  switch (resolution.method) {
+    case 'zebra':
+      return 'Thermal printer connected'
+    case 'pdf':
+      return 'Download PDF selected'
+    case 'browser':
+    default:
+      return 'Using standard print'
+  }
+}
+
+const getBulkFilename = (labelMode: BulkLabelMode): string => {
+  const labelType = labelMode === 'price-change' ? 'price-change' : 'discount'
+  return `freshsave-${labelType}-labels-${new Date().toISOString().slice(0, 10)}.pdf`
 }
