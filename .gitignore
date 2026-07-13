@@ -7,11 +7,35 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies and build outputs
 node_modules
 dist
 dist-ssr
+build
 *-dist
+packages
+.cache/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
 *.local
+
+# Local credentials and generated secrets
+*.pem
+*.key
+*.p8
+*.p12
+*.jks
+*.keystore
+credentials.json
+secrets.json
+*secret*
+*token*
+*private*key*
+*api*key*
 
 # Editor directories and files
 .vscode/*
@@ -24,9 +48,7 @@ dist-ssr
 *.sln
 *.sw?
 
-.env
 **/agent-eval-report*
-packages
 pids
 .file-manifest
 .devcontainer/
