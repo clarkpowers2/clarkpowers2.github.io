@@ -31,9 +31,10 @@ import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { QRCodeSVG } from 'qrcode.react'
 import {
   Plus, ChartLine, Package, ClockCountdown, Storefront,
-  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain, Scan, Receipt, Printer, FileText, EnvelopeSimple, GearSix, LockKey, CreditCard
+  CurrencyDollar, ShoppingCart, WarningCircle, Bell, Calculator, Brain, Scan, Receipt, Printer, FileText, EnvelopeSimple, GearSix, LockKey, CreditCard, QrCode, CopySimple, DeviceMobile
 } from '@phosphor-icons/react'
 import { toast, Toaster } from 'sonner'
 import { calculateDiscountInfo, calculateDaysUntilExpiry } from '@/lib/productUtils'
@@ -87,6 +88,7 @@ type BulkPriceUpdateResultRow = {
 
 const BRANDING_PRICE_ID = 'price_1TrRGf11fUBPJ3CnzLh8TAMH'
 const BRANDING_CHECKOUT_ENVIRONMENT = 'test'
+const STAFF_APP_STORE_URL = 'https://apps.apple.com/app/id6775850115'
 
 function mapInsForgeStore(row: InsForgeStoreRow): Store {
   return {
@@ -128,6 +130,15 @@ function mapProductStatusToInsForge(status: Product['status']) {
 
 function isBrandingSubscriptionActive(status?: string | null): boolean {
   return status === 'active' || status === 'trialing'
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
 function buildPatternSummary(rows: InsForgePatternProductRow[]): PatternSummary[] {
@@ -768,6 +779,125 @@ function App() {
     } finally {
       setSettingsSaving(false)
     }
+  }
+
+  const handleCopyStaffAppLink = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(STAFF_APP_STORE_URL)
+      } else {
+        const textArea = document.createElement('textarea')
+        textArea.value = STAFF_APP_STORE_URL
+        textArea.setAttribute('readonly', '')
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-9999px'
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+      }
+
+      toast.success('App Store link copied')
+    } catch (error) {
+      console.error('Error copying staff app link:', error)
+      toast.error('Could not copy link', {
+        description: 'Select the App Store link and copy it manually.'
+      })
+    }
+  }
+
+  const handlePrintStaffInvite = () => {
+    const qrCode = document.getElementById('staff-app-store-qr')
+    const qrMarkup = qrCode?.outerHTML
+
+    if (!qrMarkup) {
+      toast.error('QR code is not ready yet')
+      return
+    }
+
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) {
+      toast.error('Could not open print page', {
+        description: 'Allow pop-ups for FreshSave and try again.'
+      })
+      return
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>FreshSave Staff App QR Code</title>
+          <style>
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: Arial, sans-serif;
+              color: #111827;
+              background: #ffffff;
+            }
+            main {
+              width: min(7.5in, 92vw);
+              text-align: center;
+              padding: 0.5in;
+            }
+            h1 {
+              margin: 0 0 0.18in;
+              font-size: 30px;
+              line-height: 1.15;
+            }
+            p {
+              margin: 0.08in 0;
+              font-size: 16px;
+              line-height: 1.35;
+            }
+            .qr {
+              display: inline-flex;
+              margin: 0.3in 0 0.22in;
+              padding: 0.18in;
+              border: 2px solid #111827;
+              border-radius: 16px;
+            }
+            .qr svg {
+              width: min(4.25in, 72vw);
+              height: min(4.25in, 72vw);
+            }
+            .url {
+              margin-top: 0.18in;
+              font-size: 13px;
+              overflow-wrap: anywhere;
+              color: #374151;
+            }
+            @page { margin: 0.35in; }
+            @media print {
+              body { min-height: auto; }
+              main { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <main>
+            <h1>Scan to download the FreshSave Staff app</h1>
+            <p>Open your phone camera and scan this code.</p>
+            <div class="qr">${qrMarkup}</div>
+            <p class="url">${escapeHtml(STAFF_APP_STORE_URL)}</p>
+          </main>
+          <script>
+            window.addEventListener('load', () => {
+              window.focus();
+              window.print();
+            });
+          </script>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
   }
 
   const handleStartBrandingCheckout = async () => {
@@ -1581,6 +1711,71 @@ function App() {
                 <p className="text-sm text-muted-foreground">
                   Signed in as {managerLabel}. Billing access is granted only from verified InsForge Stripe webhooks.
                 </p>
+              </div>
+            </Card>
+
+            <Card className="p-6 max-w-2xl">
+              <div className="flex items-start gap-3 mb-6">
+                <div className="p-3 bg-primary/10 rounded-xl">
+                  <DeviceMobile size={28} weight="bold" className="text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Invite Staff</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Share the FreshSave Staff iOS app with your team.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1fr_220px]">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="staff-app-store-link">App Store link</Label>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Input
+                        id="staff-app-store-link"
+                        value={STAFF_APP_STORE_URL}
+                        readOnly
+                        className="font-mono text-sm"
+                        onFocus={(event) => event.currentTarget.select()}
+                      />
+                      <Button type="button" onClick={handleCopyStaffAppLink} className="shrink-0">
+                        <CopySimple size={18} weight="bold" className="mr-2" />
+                        Copy Link
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/40 p-4">
+                    <div className="flex items-start gap-3">
+                      <QrCode size={22} weight="bold" className="mt-0.5 text-primary" />
+                      <div className="space-y-2">
+                        <p className="font-semibold">Break room QR flyer</p>
+                        <p className="text-sm text-muted-foreground">
+                          Print a scan-ready sign so staff can open the App Store page from their phone camera.
+                        </p>
+                        <Button type="button" variant="outline" onClick={handlePrintStaffInvite}>
+                          <Printer size={18} weight="bold" className="mr-2" />
+                          Print QR Code
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center justify-center rounded-lg border bg-background p-4">
+                  <QRCodeSVG
+                    id="staff-app-store-qr"
+                    value={STAFF_APP_STORE_URL}
+                    size={180}
+                    level="M"
+                    includeMargin
+                    title="FreshSave Staff App Store link"
+                  />
+                  <p className="mt-3 text-center text-xs text-muted-foreground">
+                    Scan to download the Staff app
+                  </p>
+                </div>
               </div>
             </Card>
           </TabsContent>
